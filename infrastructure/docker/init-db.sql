@@ -1,0 +1,29 @@
+-- Create all schemas upfront
+-- Each module gets its own schema for isolation
+
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS patients;
+CREATE SCHEMA IF NOT EXISTS doctors;
+CREATE SCHEMA IF NOT EXISTS emr;
+CREATE SCHEMA IF NOT EXISTS appointments;
+CREATE SCHEMA IF NOT EXISTS queue;
+CREATE SCHEMA IF NOT EXISTS emergency;
+CREATE SCHEMA IF NOT EXISTS pharmacy;
+CREATE SCHEMA IF NOT EXISTS laboratory;
+CREATE SCHEMA IF NOT EXISTS radiology;
+CREATE SCHEMA IF NOT EXISTS inpatient;
+CREATE SCHEMA IF NOT EXISTS theatre;
+CREATE SCHEMA IF NOT EXISTS billing;
+CREATE SCHEMA IF NOT EXISTS insurance;
+CREATE SCHEMA IF NOT EXISTS notifications;
+CREATE SCHEMA IF NOT EXISTS audit;
+CREATE SCHEMA IF NOT EXISTS reports;
+CREATE SCHEMA IF NOT EXISTS documents;
+CREATE SCHEMA IF NOT EXISTS inventory;
+CREATE SCHEMA IF NOT EXISTS hr;
+CREATE SCHEMA IF NOT EXISTS settings;
+
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";    -- UUID generation, encryption
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";     -- Fuzzy text search for patient names
+CREATE EXTENSION IF NOT EXISTS "unaccent";    -- Search without accent marks (Persian names)

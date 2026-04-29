@@ -1,0 +1,46 @@
+services:
+  # ─── PostgreSQL ──────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: medicore_postgres
+    environment:
+      POSTGRES_USER:     medicore_user
+      POSTGRES_PASSWORD: medicore_pass
+      POSTGRES_DB:       medicore_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run this init script on first start
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medicore_user -d medicore_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: medicore_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── MailHog — catches all emails in development ─────────────────
+  mailhog:
+    image: mailhog/mailhog
+    container_name: medicore_mailhog
+    ports:
+      - "1025:1025"     # SMTP
+      - "8025:8025"     # Web UI — go to http://localhost:8025
+
+volumes:
+  postgres_data:
+  redis_data:
