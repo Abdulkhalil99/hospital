@@ -8,10 +8,11 @@ import { logger }     from '@/infrastructure/logger/logger';
 import { globalErrorHandler } from '@/shared/errors/error-handler';
 
 // ── Import module routers as you build each phase ─────────────────────
+import { doctorsRouter }  from '@/modules/doctors/doctors.router';
 import { patientsRouter } from '@/modules/patients/patients.router';
 import { authRouter } from '@/modules/auth/auth.router';
 import { i18nRouter }   from '@/modules/i18n/i18n.router';
-import { i18nMiddleware } from '@/shared/middleware/i18n.middleware';  from '@/modules/auth/auth.router';
+import { i18nMiddleware } from '@/shared/middleware/i18n.middleware';
 // import { appointmentsRouter } from '@/modules/appointments/appointments.router';
 
 export function createApp(): express.Application {
@@ -60,6 +61,7 @@ export function createApp(): express.Application {
 
   // ── Module routes ─────────────────────────────────────────────────────
   app.use('/api/v1/patients', patientsRouter);
+  app.use('/api/v1/doctors',  doctorsRouter);
   app.use('/api/v1/auth',         authRouter);
   // app.use('/api/v1/appointments', appointmentsRouter);
 

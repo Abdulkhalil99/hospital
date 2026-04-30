@@ -1,16 +1,35 @@
 {
+  "name": "@medicore/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev":        "next dev --port 3001",
+    "build":      "next build",
+    "start":      "next start --port 3001",
+    "lint":       "next lint",
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
-    "@hookform/resolvers": "^3.3.0",
-    "@medicore/shared-constants": "workspace:*",
-    "@medicore/shared-types": "workspace:*",
-    "@medicore/shared-validators": "workspace:*",
-    "axios": "^1.6.0",
-    "date-fns": "^4.1.0",
-    "date-fns-jalali": "4.1.0-0",
-    "next-intl": "^3.0.0",
-    "react-hook-form": "^7.47.0",
+    "next":         "14.2.35",
+    "react":        "^18",
+    "react-dom":    "^18",
+    "next-intl":    "^3.0.0",
+    "date-fns":     "^3.0.0",
+    "zustand":      "^4.4.0",
     "socket.io-client": "^4.6.0",
-    "zod": "^3.22.0",
-    "zustand": "^4.4.0"
+    "@medicore/shared-types":      "workspace:*",
+    "@medicore/shared-validators": "workspace:*",
+    "@medicore/shared-constants":  "workspace:*"
+  },
+  "devDependencies": {
+    "typescript":              "^5",
+    "@types/node":             "^20",
+    "@types/react":            "^18",
+    "@types/react-dom":        "^18",
+    "tailwindcss":             "^3",
+    "postcss":                 "^8",
+    "autoprefixer":            "^10",
+    "eslint":                  "^8",
+    "eslint-config-next":      "14.2.35"
   }
 }
