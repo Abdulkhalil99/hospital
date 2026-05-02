@@ -16,6 +16,9 @@ async function bootstrap(): Promise<void> {
   await new I18nService().loadAllTranslations();
 
   // 2 — Build the Express app
+  const { startEmrLockScheduler } = await import('./infrastructure/queue/workers/emr-lock.worker');
+  startEmrLockScheduler();
+
   const app        = createApp();
   const httpServer = http.createServer(app);
 

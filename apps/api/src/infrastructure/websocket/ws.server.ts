@@ -58,3 +58,12 @@ export function getIO(): SocketServer {
 export function emitToQueue(doctorId: string, event: string, data: unknown): void {
   getIO().to(`queue:doctor:${doctorId}`).emit(event, data);
 }
+
+// Emit to all clients subscribed to the emergency department room
+export function emitToEmergency(event: string, data: unknown): void {
+  try {
+    getIO().to('emergency').emit(event, data);
+  } catch {
+    // WS not initialised yet — ignore during startup
+  }
+}
