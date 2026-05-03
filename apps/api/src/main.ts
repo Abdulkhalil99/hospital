@@ -19,6 +19,18 @@ async function bootstrap(): Promise<void> {
   const { startEmrLockScheduler } = await import('./infrastructure/queue/workers/emr-lock.worker');
   startEmrLockScheduler();
 
+  const { registerBillingHooks } = await import('./modules/billing/billing.hooks');
+  registerBillingHooks();
+
+  const { registerNotificationHooks } = await import('./modules/notifications/notifications.hooks');
+  registerNotificationHooks();
+
+  const { startNotificationWorker } = await import('./modules/notifications/notifications.worker');
+  startNotificationWorker();
+
+  const { loadTemplateCache } = await import('./modules/notifications/template.engine');
+  await loadTemplateCache();
+
   const app        = createApp();
   const httpServer = http.createServer(app);
 

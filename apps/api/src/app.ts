@@ -10,6 +10,8 @@ import { authRouter }          from '@/modules/auth/auth.router';
 import { patientsRouter }      from '@/modules/patients/patients.router';
 import { doctorsRouter }       from '@/modules/doctors/doctors.router';
 import { appointmentsRouter }  from '@/modules/appointments/appointments.router';
+import { notificationsRouter }  from '@/modules/notifications/notifications.router';
+import { billingRouter }        from '@/modules/billing/billing.router';
 import { emergencyRouter }      from '@/modules/emergency/emergency.router';
 import { laboratoryRouter }     from '@/modules/laboratory/laboratory.router';
 import { pharmacyRouter }       from '@/modules/pharmacy/pharmacy.router';
@@ -58,6 +60,8 @@ export function createApp(): express.Application {
   app.use('/api/v1/patients',     patientsRouter);
   app.use('/api/v1/doctors',      doctorsRouter);
   app.use('/api/v1/appointments', appointmentsRouter);
+  app.use('/api/v1/notifications', notificationsRouter);
+  app.use('/api/v1/billing',       billingRouter);
   app.use('/api/v1/emergency',     emergencyRouter);
   app.use('/api/v1/laboratory',    laboratoryRouter);
   app.use('/api/v1/pharmacy',      pharmacyRouter);
