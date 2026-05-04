@@ -29,6 +29,10 @@ export function initWebSocket(httpServer: HttpServer): SocketServer {
     }
   });
 
+  // Register telemedicine WebRTC signaling
+  const { registerSignalingHandlers } = require('../../modules/telemedicine/signaling.handler');
+  registerSignalingHandlers(io);
+
   io.on('connection', (socket: Socket) => {
     logger.info('WS client connected', { socketId: socket.id });
 
