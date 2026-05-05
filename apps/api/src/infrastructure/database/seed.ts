@@ -67,9 +67,31 @@ async function run(): Promise<void> {
 
   // 3 — Super admin user
   const { rows } = await db.query(`
-    INSERT INTO auth.users (username, email, password_hash, full_name)
-    VALUES ('superadmin', 'admin@medicore.local', $1, 'Super Administrator')
-    ON CONFLICT (username) DO UPDATE SET updated_at = NOW()
+    INSERT INTO auth.users (
+      username, email, password_hash, full_name,
+      preferred_language, must_change_password
+    )
+    VALUES (
+      'superadmin', 'superadmin@medicore.local', $1, 'Super Administrator',
+      'en', TRUE
+    )
+    ON CONFLICT (username) DO UPDATE
+    SET
+      password_hash = CASE
+        WHEN auth.users.password_hash = '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO'
+          OR auth.users.password_hash NOT LIKE '$2%'
+          OR length(auth.users.password_hash) <> 60
+        THEN EXCLUDED.password_hash
+        ELSE auth.users.password_hash
+      END,
+      must_change_password = CASE
+        WHEN auth.users.password_hash = '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO'
+          OR auth.users.password_hash NOT LIKE '$2%'
+          OR length(auth.users.password_hash) <> 60
+        THEN EXCLUDED.must_change_password
+        ELSE auth.users.must_change_password
+      END,
+      updated_at = NOW()
     RETURNING id
   `, [DEFAULT_SUPER_ADMIN_PASSWORD_HASH]);
 

@@ -1,25 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './app-error';
-import { logger } from '@/infrastructure/logger/logger';
+import { logger }   from '@/infrastructure/logger/logger';
 
-// 4 parameters = Express identifies this as error middleware
 export function globalErrorHandler(
-  err:   Error,
-  req:   Request,
-  res:   Response,
+  err:  Error,
+  req:  Request,
+  res:  Response,
   _next: NextFunction,
 ): void {
-  const requestId = req.headers['x-request-id'] as string | undefined;
-
-  // ── Known error (we threw it intentionally) ────────────────────────
+  // Known application error
   if (err instanceof AppError) {
-    logger.warn('Application error', {
-      code:       err.code,
-      statusCode: err.statusCode,
-      path:       req.path,
-      method:     req.method,
-      requestId,
-    });
+    if (err.statusCode >= 500) {
+      logger.error('App error', {
+        code:    err.code,
+        message: err.message,
+        path:    req.path,
+        method:  req.method,
+      });
+    }
 
     res.status(err.statusCode).json({
       success: false,
@@ -28,25 +26,65 @@ export function globalErrorHandler(
         message: err.message,
         ...(err.details ? { details: err.details } : {}),
       },
-      meta: { requestId, timestamp: new Date().toISOString() },
+      meta: {
+        requestId: req.headers['x-request-id'],
+        timestamp: new Date().toISOString(),
+      },
     });
     return;
   }
 
-  // ── Unknown error (bug — log the full stack) ───────────────────────
-  logger.error('Unexpected server error', {
-    message:   err.message,
-    stack:     err.stack,
-    path:      req.path,
-    requestId,
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    res.status(401).json({
+      success: false,
+      error: { code: 'INVALID_TOKEN', message: 'Invalid token' },
+    });
+    return;
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    res.status(401).json({
+      success: false,
+      error: { code: 'TOKEN_EXPIRED', message: 'Token expired' },
+    });
+    return;
+  }
+
+  // PostgreSQL errors
+  if ((err as any).code === '23505') {
+    res.status(409).json({
+      success: false,
+      error: { code: 'CONFLICT', message: 'A record with these details already exists' },
+    });
+    return;
+  }
+
+  if ((err as any).code === '23503') {
+    res.status(400).json({
+      success: false,
+      error: { code: 'FOREIGN_KEY', message: 'Referenced record does not exist' },
+    });
+    return;
+  }
+
+  // Unknown error — never expose internals
+  logger.error('Unhandled error', {
+    message: err.message,
+    stack:   err.stack,
+    path:    req.path,
+    method:  req.method,
   });
 
   res.status(500).json({
     success: false,
     error: {
-      code:    'INTERNAL_SERVER_ERROR',
+      code:    'INTERNAL_ERROR',
       message: 'An unexpected error occurred. Please try again.',
     },
-    meta: { requestId, timestamp: new Date().toISOString() },
+    meta: {
+      requestId: req.headers['x-request-id'],
+      timestamp: new Date().toISOString(),
+    },
   });
 }

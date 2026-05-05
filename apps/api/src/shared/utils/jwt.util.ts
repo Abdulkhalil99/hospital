@@ -16,7 +16,6 @@ export function signAccessToken(
 ): string {
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.accessExpiresIn as jwt.SignOptions['expiresIn'],
-    subject:   payload.sub,
   });
 }
 

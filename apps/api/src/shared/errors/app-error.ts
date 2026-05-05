@@ -1,10 +1,9 @@
-// Base — all custom errors extend this
 export class AppError extends Error {
   constructor(
-    public readonly code:       string,     // e.g. 'PATIENT_NOT_FOUND'
-    public readonly message:    string,     // shown to the client
-    public readonly statusCode: number = 500,
-    public readonly details?:   unknown[],  // validation field errors etc.
+    public readonly message:    string,
+    public readonly statusCode: number,
+    public readonly code:       string,
+    public readonly details?:   unknown,
   ) {
     super(message);
     this.name = 'AppError';
@@ -12,47 +11,54 @@ export class AppError extends Error {
   }
 }
 
-// 404
-export class NotFoundError extends AppError {
-  constructor(resource: string, identifier?: string) {
-    super(
-      `${resource.toUpperCase().replace(/ /g, '_')}_NOT_FOUND`,
-      identifier
-        ? `${resource} '${identifier}' not found`
-        : `${resource} not found`,
-      404,
-    );
+export class ValidationError extends AppError {
+  constructor(errors: { message: string; path?: (string | number)[] }[]) {
+    super('Request validation failed', 422, 'VALIDATION_ERROR', errors);
   }
 }
 
-// 401 — not logged in at all
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Authentication required') {
-    super('UNAUTHORIZED', message, 401);
+  constructor(message = 'Unauthorized') {
+    super(message, 401, 'UNAUTHORIZED');
   }
 }
 
-// 403 — logged in but lacking permission
 export class ForbiddenError extends AppError {
   constructor(permission?: string) {
     super(
-      'FORBIDDEN',
-      permission ? `Missing permission: ${permission}` : 'Access denied',
+      permission
+        ? `You do not have permission: ${permission}`
+        : 'Access denied',
       403,
+      'FORBIDDEN',
     );
   }
 }
 
-// 422 — body failed Zod validation
-export class ValidationError extends AppError {
-  constructor(details: unknown[]) {
-    super('VALIDATION_ERROR', 'Request validation failed', 422, details);
+export class NotFoundError extends AppError {
+  constructor(resource: string, id?: string) {
+    super(
+      id ? `${resource} '${id}' not found` : `${resource} not found`,
+      404,
+      'NOT_FOUND',
+    );
   }
 }
 
-// 409 — e.g. duplicate national ID
 export class ConflictError extends AppError {
   constructor(message: string) {
-    super('CONFLICT', message, 409);
+    super(message, 409, 'CONFLICT');
+  }
+}
+
+export class RateLimitError extends AppError {
+  constructor(message = 'Too many requests') {
+    super(message, 429, 'RATE_LIMIT_EXCEEDED');
+  }
+}
+
+export class InternalError extends AppError {
+  constructor(message = 'An unexpected error occurred') {
+    super(message, 500, 'INTERNAL_ERROR');
   }
 }

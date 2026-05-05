@@ -17,14 +17,14 @@ UPDATE settings.hospital_settings SET
 INSERT INTO auth.users
   (username, email, password_hash, full_name, preferred_language, must_change_password)
 VALUES
-  ('superadmin',  'superadmin@medicore.local',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Super Administrator',    'en', TRUE),
-  ('admin1',      'admin@medicore.local',       '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Hospital Administrator', 'fa', TRUE),
-  ('dr.ahmad',    'dr.ahmad@medicore.local',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Dr. Ahmad Karimi',       'fa', TRUE),
-  ('nurse.sara',  'nurse.sara@medicore.local',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Sara Mohammadi',         'fa', TRUE),
-  ('reception1',  'reception@medicore.local',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Ali Hosseini',           'fa', TRUE),
-  ('pharmacist1', 'pharmacy@medicore.local',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Zahra Ahmadi',           'fa', TRUE),
-  ('labtech1',    'lab@medicore.local',         '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Reza Tehrani',           'fa', TRUE),
-  ('accountant1', 'accounts@medicore.local',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQyCgBDRFuQNLUiXzLfSlXIeO', 'Maryam Nazari',          'fa', TRUE)
+  ('superadmin',  'superadmin@medicore.local',  '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Super Administrator',    'en', TRUE),
+  ('admin1',      'admin@medicore.local',       '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Hospital Administrator', 'fa', TRUE),
+  ('dr.ahmad',    'dr.ahmad@medicore.local',    '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Dr. Ahmad Karimi',       'fa', TRUE),
+  ('nurse.sara',  'nurse.sara@medicore.local',  '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Sara Mohammadi',         'fa', TRUE),
+  ('reception1',  'reception@medicore.local',   '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Ali Hosseini',           'fa', TRUE),
+  ('pharmacist1', 'pharmacy@medicore.local',    '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Zahra Ahmadi',           'fa', TRUE),
+  ('labtech1',    'lab@medicore.local',         '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Reza Tehrani',           'fa', TRUE),
+  ('accountant1', 'accounts@medicore.local',    '$2b$12$z4um5ZpnGWaeHueIdaou0.mU9YLK1GnzwCOeUVbkfXRCiY7tXc8q2', 'Maryam Nazari',          'fa', TRUE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Assign roles using plain INSERT ... SELECT (no PROCEDURE)
