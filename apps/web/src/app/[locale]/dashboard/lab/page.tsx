@@ -1,0 +1,77 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { DashboardShell } from '@/components/layout/DashboardShell';
+import { StatCard }        from '@/components/layout/StatCard';
+import { DataTable }       from '@/components/layout/DataTable';
+import { Badge }           from '@/components/layout/Badge';
+import { api }             from '@/lib/api';
+
+const NAV = [
+  { label: 'Worklist',       icon: '🧪', path: '' },
+  { label: 'Enter results',  icon: '✏️', path: 'results' },
+  { label: 'Critical alerts',icon: '🚨', path: 'critical' },
+  { label: 'Test catalog',   icon: '📋', path: 'catalog' },
+];
+
+export default function LabDashboard({ params: { locale } }: { params: { locale: string } }) {
+  const base = `/${locale}/dashboard/lab`;
+  const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
+
+  const [worklist, setWorklist] = useState<any[]>([]);
+  const [critical, setCritical] = useState<any[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    Promise.all([
+      api.get<any[]>(`/laboratory/worklist?date=${today}`),
+      api.get<any[]>('/laboratory/critical-alerts'),
+    ]).then(([w, c]) => {
+      setWorklist(w ?? []); setCritical(c ?? []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const stat = (u: string) => worklist.filter((w: any) => w.urgency === u).length;
+
+  return (
+    <DashboardShell navItems={nav} title="Laboratory Dashboard" locale={locale}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
+        <StatCard label="Total pending" value={worklist.length}   icon="🧪" color="#185FA5" />
+        <StatCard label="STAT orders"   value={stat('stat')}      icon="⚡" color="#991b1b" />
+        <StatCard label="Urgent"        value={stat('urgent')}    icon="⚠️" color="#854F0B" />
+        <StatCard label="Critical alerts" value={critical.length} icon="🚨" color="#991b1b" />
+      </div>
+
+      {critical.length > 0 && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
+          <div style={{ fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>🚨 Critical Values — Requires Immediate Action</div>
+          {critical.map((c: any, i: number) => (
+            <div key={i} style={{ fontSize: 13, color: '#7f1d1d', padding: '4px 0', borderTop: i > 0 ? '1px solid #fca5a5' : 'none' }}>
+              <strong>{c.patient_name}</strong> ({c.patient_mrn}) — {c.component_name}: <strong>{c.result_value}</strong> <Badge label={String(c.flag)} preset="danger" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Today's worklist</div>
+      <DataTable
+        keyField="id" loading={loading} rows={worklist} empty="Worklist is empty"
+        columns={[
+          { key: 'urgency', label: 'Priority', width: '90px',
+            render: r => {
+              const u = String(r.urgency);
+              return <Badge label={u.toUpperCase()} preset={u === 'stat' ? 'danger' : u === 'urgent' ? 'warning' : 'info'} />;
+            }},
+          { key: 'barcode',      label: 'Barcode', width: '160px',
+            render: r => <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#185FA5' }}>{String(r.barcode ?? '—')}</span> },
+          { key: 'patient_name', label: 'Patient' },
+          { key: 'test_name',    label: 'Test', render: r => <strong>{String(r.test_name)}</strong> },
+          { key: 'sample_type',  label: 'Sample', width: '90px' },
+          { key: 'sample_status',label: 'Status', width: '110px',
+            render: r => <Badge label={String(r.sample_status ?? r.status ?? '—')} preset="info" /> },
+        ]}
+      />
+    </DashboardShell>
+  );
+}

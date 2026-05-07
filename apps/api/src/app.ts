@@ -75,7 +75,8 @@ export function createApp(): express.Application {
     ['/api/v1/emergency',     './modules/emergency/emergency.router'],
     ['/api/v1/billing',       './modules/billing/billing.router'],
     ['/api/v1/notifications', './modules/notifications/notifications.router'],
-    ['/api/v1/telemedicine',  './modules/telemedicine/telemedicine.router'],
+    ['/api/v1/telemedicine',  './modules/telemedicine/telemedicine.router',
+    ['/api/v1/reports', './modules/reports/reports.router']],
     ['/api/v1/i18n',          './modules/i18n/i18n.router'],
   ];
 
