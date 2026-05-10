@@ -36,6 +36,18 @@ export interface ChatMessageRow {
   sender_name?: string;
 }
 
+export interface RTCSessionDescriptionPayload {
+  type?: string;
+  sdp?: string | null;
+}
+
+export interface RTCIceCandidatePayload {
+  candidate?: string;
+  sdpMid?: string | null;
+  sdpMLineIndex?: number | null;
+  usernameFragment?: string | null;
+}
+
 // WebRTC signaling message types
 export type SignalingMessageType =
   | 'offer'
@@ -51,8 +63,8 @@ export interface SignalingMessage {
   sessionId:    string;
   fromRole:     'doctor' | 'patient';
   // WebRTC payloads
-  sdp?:         RTCSessionDescriptionInit;
-  candidate?:   RTCIceCandidateInit;
+  sdp?:         RTCSessionDescriptionPayload;
+  candidate?:   RTCIceCandidatePayload;
   // Chat payload
   message?:     string;
   messageType?: string;

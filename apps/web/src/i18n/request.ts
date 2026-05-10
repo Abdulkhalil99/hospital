@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { notFound }         from 'next/navigation';
+import type { AbstractIntlMessages } from 'next-intl';
 
 export const locales  = ['en', 'fa', 'ps'] as const;
 export type  Locale   = typeof locales[number];
@@ -11,11 +12,11 @@ export function isRTL(locale: Locale): boolean {
 }
 
 export default getRequestConfig(async ({ locale }) => {
-  if (!locales.includes(locale as Locale)) notFound();
+  if (!locale || !locales.includes(locale as Locale)) notFound();
 
   // Load all namespace files for this locale
   const namespaces = ['common', 'patients', 'auth', 'emr'];
-  const messages: Record<string, unknown> = {};
+  const messages: AbstractIntlMessages = {};
 
   for (const ns of namespaces) {
     try {

@@ -1,20 +1,29 @@
 'use client';
-import { useLocale as useNextIntlLocale, useTranslations } from 'next-intl';
-import { useRouter, usePathname }                          from '@/i18n/navigation';
+import { useLocale as useNextIntlLocale } from 'next-intl';
 import type { Locale }                                     from '@/i18n/request';
+import { locales }                                         from '@/i18n/request';
 
 export const RTL_LOCALES: Locale[] = ['fa', 'ps'];
 
 export function useLocale() {
   const locale   = useNextIntlLocale() as Locale;
-  const router   = useRouter();
-  const pathname = usePathname();
 
   const isRTL  = RTL_LOCALES.includes(locale);
   const dir    = isRTL ? 'rtl' : 'ltr';
 
   function switchLocale(newLocale: Locale) {
-    router.replace(pathname, { locale: newLocale });
+    if (typeof window === 'undefined') return;
+
+    const { pathname, search, hash } = window.location;
+    const parts = pathname.split('/');
+
+    if (locales.includes(parts[1] as Locale)) {
+      parts[1] = newLocale;
+    } else {
+      parts.splice(1, 0, newLocale);
+    }
+
+    window.location.assign(`${parts.join('/')}${search}${hash}`);
   }
 
   return { locale, isRTL, dir, switchLocale };

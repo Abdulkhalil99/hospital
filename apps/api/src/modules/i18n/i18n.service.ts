@@ -11,7 +11,10 @@ export class I18nService {
     const locales: Locale[] = ['en', 'fa', 'ps'];
     for (const locale of locales) {
       const entries = await this.repo.getTranslationsByLocale(locale);
-      loadTranslations(locale, entries);
+      loadTranslations(
+        locale,
+        Object.fromEntries(entries.map((entry) => [entry.key, entry.value])),
+      );
       logger.info(`Loaded ${entries.length} translations for ${locale}`);
     }
   }

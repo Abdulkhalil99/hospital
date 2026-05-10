@@ -43,6 +43,16 @@ async function request<T>(
     );
   }
 
+  // Some endpoints return pagination alongside `data` at the top level.
+  // Preserve that shape so callers can access both the rows and totals.
+  if (Object.prototype.hasOwnProperty.call(data, 'pagination')) {
+    return {
+      data:       data.data,
+      pagination: data.pagination,
+      ...(data.meta !== undefined ? { meta: data.meta } : {}),
+    } as T;
+  }
+
   return data.data as T;
 }
 

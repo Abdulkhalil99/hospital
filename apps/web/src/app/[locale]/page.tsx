@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter }            from 'next/navigation';
 import { api }                  from '@/lib/api';
-import { saveSession, getDashboardPath, getSession } from '@/lib/auth';
+import { saveSession, getDashboardPath, getSession, UserRole } from '@/lib/auth';
 import { useT, isRTL }          from '@/lib/i18n';
 
 export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
@@ -30,17 +30,20 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     e.preventDefault(); setError(''); setLoading(true);
     try {
       const res = await api.post<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', { username, password });
-      const me  = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/auth/me`,
-        { headers: { Authorization: `Bearer ${res.accessToken}` } },
-      ).then(r => r.json());
+      const me  = await api.get<{
+        id: string;
+        username: string;
+        mustChangePassword: boolean;
+        roles: UserRole[];
+        permissions: string[];
+      }>('/auth/me', res.accessToken);
 
       const user = {
-        id:                 me.data.id,
-        username:           me.data.username,
-        mustChangePassword: me.data.mustChangePassword,
-        roles:              me.data.roles,
-        permissions:        me.data.permissions,
+        id:                 me.id,
+        username:           me.username,
+        mustChangePassword: me.mustChangePassword,
+        roles:              me.roles,
+        permissions:        me.permissions,
       };
 
       saveSession({ accessToken: res.accessToken, refreshToken: res.refreshToken, user });

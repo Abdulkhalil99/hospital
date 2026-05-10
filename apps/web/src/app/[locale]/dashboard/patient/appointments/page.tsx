@@ -14,13 +14,36 @@ export default function MyAppointments({ params: { locale } }: { params: { local
   const [appts,    setAppts]   = useState<any[]>([]);
   const [loading,  setLoading] = useState(true);
   const [upcoming, setUpcoming]= useState(true);
+  const [msg,      setMsg]     = useState('');
+  const [cancellingId, setCancellingId] = useState('');
 
-  useEffect(() => {
+  async function loadAppointments(nextUpcoming = upcoming) {
     setLoading(true);
-    api.get<any[]>(`/portal/appointments?upcoming=${upcoming}`)
+    api.get<any[]>(`/portal/appointments?upcoming=${nextUpcoming}`)
       .then(r => { setAppts(r ?? []); setLoading(false); })
       .catch(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadAppointments(upcoming);
   }, [upcoming]);
+
+  async function cancelAppointment(appointmentId: string) {
+    const reason = window.prompt('Please enter a reason for cancellation:');
+    if (!reason || !reason.trim()) return;
+
+    setCancellingId(appointmentId);
+    setMsg('');
+    try {
+      await api.post(`/portal/appointments/${appointmentId}/cancel`, { reason: reason.trim() });
+      setMsg('✅ Appointment cancelled successfully.');
+      await loadAppointments(upcoming);
+    } catch (err: any) {
+      setMsg(`❌ ${err.message ?? 'Failed to cancel appointment.'}`);
+    } finally {
+      setCancellingId('');
+    }
+  }
 
   return (
     <DashboardShell navItems={nav} title={t('nav.myappointments')} locale={locale}>
@@ -33,6 +56,19 @@ export default function MyAppointments({ params: { locale } }: { params: { local
           </button>
         ))}
       </div>
+
+      {msg && (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: 8,
+          marginBottom: 16,
+          fontSize: 13,
+          background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2',
+          color: msg.startsWith('✅') ? '#166534' : '#991b1b',
+        }}>
+          {msg}
+        </div>
+      )}
 
       <DataTable
         keyField="id" loading={loading} rows={appts} empty="No appointments found"
@@ -51,6 +87,20 @@ export default function MyAppointments({ params: { locale } }: { params: { local
               const p = s === 'completed' ? 'success' : s === 'cancelled' ? 'danger' : s === 'checked_in' ? 'warning' : 'info';
               return <Badge label={s} preset={p as any} />;
             }},
+          { key: 'action', label: '', width: '130px',
+            render: r => {
+              const cancellable = ['scheduled', 'confirmed'].includes(String(r.status));
+              if (!cancellable) return <span style={{ color: '#aaa', fontSize: 12 }}>—</span>;
+              return (
+                <button
+                  onClick={() => cancelAppointment(String(r.id))}
+                  disabled={cancellingId === r.id}
+                  style={{ fontSize: 12, padding: '5px 12px', background: '#fef2f2', color: '#991b1b' }}
+                >
+                  {cancellingId === r.id ? 'Cancelling…' : 'Cancel'}
+                </button>
+              );
+            } },
         ]}
       />
     </DashboardShell>

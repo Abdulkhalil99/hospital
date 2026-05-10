@@ -1,8 +1,10 @@
 import { PortalRepository } from './portal.repository';
-import { NotFoundError }    from '@/shared/errors/app-error';
+import { AppointmentsService } from '@/modules/appointments/appointments.service';
+import { ConflictError, NotFoundError }    from '@/shared/errors/app-error';
 
 export class PortalService {
   private repo = new PortalRepository();
+  private appointments = new AppointmentsService();
 
   private async getPatientOrFail(userId: string) {
     const patient = await this.repo.getPatientByUserId(userId);
@@ -23,6 +25,17 @@ export class PortalService {
   async getMyAppointments(userId: string, upcoming = false) {
     const patient = await this.getPatientOrFail(userId);
     return this.repo.getMyAppointments(patient.id, upcoming);
+  }
+
+  async cancelMyAppointment(userId: string, appointmentId: string, reason: string) {
+    const patient = await this.getPatientOrFail(userId);
+    const appointment = await this.appointments.getById(appointmentId);
+
+    if (appointment.patient_id !== patient.id) {
+      throw new NotFoundError('Appointment', appointmentId);
+    }
+
+    return this.appointments.cancel(appointmentId, reason, userId);
   }
 
   async getMyLabResults(userId: string) {
@@ -52,7 +65,39 @@ export class PortalService {
     return this.repo.getMyAllergies(patient.id);
   }
 
-  async linkPatient(userId: string, patientId: string) {
-    await this.repo.linkPortalUser(patientId, userId);
+  async linkPatient(userId: string, data: {
+    patientId?: string;
+    mrn?: string;
+    phone?: string;
+    dateOfBirth?: string;
+  }) {
+    const existing = await this.repo.getPatientByUserId(userId);
+    if (existing) {
+      const samePatient =
+        (data.patientId && existing.id === data.patientId) ||
+        (data.mrn && existing.mrn === data.mrn);
+
+      if (samePatient) return existing;
+      throw new ConflictError('This portal account is already linked to a patient record.');
+    }
+
+    const patient = data.patientId
+      ? await this.repo.getPatientById(data.patientId)
+      : await this.repo.findPatientForPortalLink({
+        mrn: data.mrn!,
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth,
+      });
+
+    if (!patient) {
+      throw new NotFoundError('Matching patient record');
+    }
+
+    if (patient.portal_user_id && patient.portal_user_id !== userId) {
+      throw new ConflictError('This patient record is already linked to another portal account.');
+    }
+
+    await this.repo.linkPortalUser(patient.id, userId);
+    return patient;
   }
 }

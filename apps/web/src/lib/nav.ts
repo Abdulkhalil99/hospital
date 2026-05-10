@@ -46,7 +46,7 @@ export const LAB_NAV: NavDef[] = [
 export const NURSE_NAV: NavDef[] = [
   { labelKey: 'nav.queue',         icon: '📋', path: '/dashboard/nurse' },
   { labelKey: 'nav.vitals',        icon: '💓', path: '/dashboard/nurse/vitals' },
-  { labelKey: 'nav.triage',        icon: '��', path: '/dashboard/nurse/triage' },
+  { labelKey: 'nav.triage',        icon: '🚨', path: '/dashboard/nurse/triage' },
   { labelKey: 'nav.patients',      icon: '👥', path: '/dashboard/nurse/patients' },
 ];
 

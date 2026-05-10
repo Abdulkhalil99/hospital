@@ -3,6 +3,17 @@ import { getDb } from '@/infrastructure/database/db.client';
 export class PortalRepository {
   private db = getDb();
 
+  async getPatientById(patientId: string) {
+    const { rows } = await this.db.query(
+      `SELECT *
+       FROM patients.patients
+       WHERE id = $1 AND is_deleted = FALSE
+       LIMIT 1`,
+      [patientId],
+    );
+    return rows[0] ?? null;
+  }
+
   async getPatientByUserId(userId: string) {
     const { rows } = await this.db.query(
       `SELECT * FROM patients.patients
@@ -12,9 +23,43 @@ export class PortalRepository {
     return rows[0] ?? null;
   }
 
+  async findPatientForPortalLink(data: {
+    mrn: string;
+    phone?: string;
+    dateOfBirth?: string;
+  }) {
+    const conditions = [
+      'mrn = $1',
+      'is_deleted = FALSE',
+      'is_active = TRUE',
+    ];
+    const values: unknown[] = [data.mrn];
+    let index = 2;
+
+    if (data.phone) {
+      conditions.push(`regexp_replace(phone, '\\D', '', 'g') = $${index++}`);
+      values.push(data.phone.replace(/\D/g, ''));
+    }
+
+    if (data.dateOfBirth) {
+      conditions.push(`date_of_birth = $${index++}::DATE`);
+      values.push(data.dateOfBirth);
+    }
+
+    const { rows } = await this.db.query(
+      `SELECT *
+       FROM patients.patients
+       WHERE ${conditions.join(' AND ')}
+       LIMIT 1`,
+      values,
+    );
+    return rows[0] ?? null;
+  }
+
   async linkPortalUser(patientId: string, userId: string) {
     await this.db.query(
-      `UPDATE patients.patients SET portal_user_id = $2
+      `UPDATE patients.patients
+       SET portal_user_id = $2, updated_at = NOW(), updated_by = $2
        WHERE id = $1`,
       [patientId, userId],
     );

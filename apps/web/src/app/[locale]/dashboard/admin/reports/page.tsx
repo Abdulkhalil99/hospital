@@ -20,6 +20,20 @@ const STATUS_COLOR: Record<string,string> = {
   cancelled: '#991b1b', no_show: '#888', checked_in: '#854F0B',
 };
 
+function formatCurrencyTooltip(value: unknown, label: string): [string, string] {
+  return [`AFN ${Number(value ?? 0).toLocaleString()}`, label];
+}
+
+function formatMinutesTooltip(value: unknown, label: string): [string, string] {
+  return [`${Number(value ?? 0)} min`, label];
+}
+
+function renderAppointmentStatusLabel(props: any) {
+  const status = String(props?.payload?.status ?? '');
+  const percent = Number(props?.percent ?? 0);
+  return `${status} ${(percent * 100).toFixed(0)}%`;
+}
+
 export default function ReportsPage({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
   const rtl = isRTL(locale);
@@ -130,7 +144,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => (v/1000).toFixed(0)+'k'} />
-                <Tooltip formatter={(v: number) => [`AFN ${Number(v).toLocaleString()}`, 'Revenue']} labelFormatter={l => `Date: ${l}`} />
+                <Tooltip formatter={(value) => formatCurrencyTooltip(value, 'Revenue')} labelFormatter={l => `Date: ${l}`} />
                 <Area type="monotone" dataKey="revenue" stroke="#185FA5" strokeWidth={2} fill="url(#revGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -155,10 +169,10 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
               <div style={chartTitle}>Appointments by status (30d)</div>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={apptStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={({ status, percent }) => `${status} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={11}>
+                  <Pie data={apptStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={renderAppointmentStatusLabel} labelLine={false} fontSize={11}>
                     {apptStatus.map((s,i) => <Cell key={i} fill={STATUS_COLOR[s.status] ?? COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v, n) => [v, n]} />
+                  <Tooltip formatter={(value, name) => [String(value ?? '—'), String(name ?? 'Status')]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -183,7 +197,10 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
                 <YAxis yAxisId="left"  tick={{ fontSize: 11 }} tickFormatter={v => 'AFN '+(v/1000).toFixed(0)+'k'} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number, n) => [n === 'revenue' ? `AFN ${Number(v).toLocaleString()}` : v, n === 'revenue' ? 'Revenue' : 'Transactions']} />
+                <Tooltip formatter={(value, name) => [
+                  name === 'revenue' ? `AFN ${Number(value ?? 0).toLocaleString()}` : String(value ?? 0),
+                  name === 'revenue' ? 'Revenue' : 'Transactions',
+                ]} />
                 <Legend />
                 <Area yAxisId="left"  type="monotone" dataKey="revenue"      stroke="#185FA5" fill="url(#r2)" strokeWidth={2} name="revenue" />
                 <Area yAxisId="right" type="monotone" dataKey="transactions" stroke="#0F6E56" fill="none"      strokeWidth={2} name="transactions" />
@@ -198,7 +215,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => 'AFN '+(v/1000).toFixed(0)+'k'} />
                 <YAxis type="category" dataKey="age_bucket" tick={{ fontSize: 11 }} width={90} />
-                <Tooltip formatter={(v: number) => [`AFN ${Number(v).toLocaleString()}`, 'Balance']} />
+                <Tooltip formatter={(value) => formatCurrencyTooltip(value, 'Balance')} />
                 <Bar dataKey="total_balance" fill="#991b1b" radius={[0,4,4,0]} name="Balance" />
               </BarChart>
             </ResponsiveContainer>
@@ -274,7 +291,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="level" tickFormatter={l => `ESI ${l}`} tick={{ fontSize: 11 }} width={60} />
-                  <Tooltip labelFormatter={l => `ESI ${l}`} formatter={(v: number) => [`${v} min`, 'Avg time']} />
+                  <Tooltip labelFormatter={l => `ESI ${l}`} formatter={(value) => formatMinutesTooltip(value, 'Avg time')} />
                   <Bar dataKey="avgMinutes" fill="#185FA5" radius={[0,4,4,0]} name="Avg minutes" />
                 </BarChart>
               </ResponsiveContainer>

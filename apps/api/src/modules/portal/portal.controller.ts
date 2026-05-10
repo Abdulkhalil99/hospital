@@ -11,13 +11,21 @@ export const portalController = {
     const upcoming = req.query.upcoming === 'true';
     res.json({ success: true, data: await svc.getMyAppointments(req.user!.id, upcoming) });
   }),
+  cancelAppointment: asyncHandler(async (req, res) => {
+    const result = await svc.cancelMyAppointment(
+      req.user!.id,
+      req.params.appointmentId,
+      req.body.reason,
+    );
+    res.json({ success: true, data: result });
+  }),
   getLabResults:    asyncHandler(async (req, res) => { res.json({ success: true, data: await svc.getMyLabResults(req.user!.id) }); }),
   getPrescriptions: asyncHandler(async (req, res) => { res.json({ success: true, data: await svc.getMyPrescriptions(req.user!.id) }); }),
   getInvoices:      asyncHandler(async (req, res) => { res.json({ success: true, data: await svc.getMyInvoices(req.user!.id) }); }),
   getInvoiceDetail: asyncHandler(async (req, res) => { res.json({ success: true, data: await svc.getMyInvoiceDetail(req.user!.id, req.params.invoiceId) }); }),
   getAllergies:      asyncHandler(async (req, res) => { res.json({ success: true, data: await svc.getMyAllergies(req.user!.id) }); }),
   linkPatient:      asyncHandler(async (req, res) => {
-    await svc.linkPatient(req.user!.id, req.body.patientId);
-    res.json({ success: true, data: { message: 'Patient record linked to your account.' } });
+    const patient = await svc.linkPatient(req.user!.id, req.body);
+    res.json({ success: true, data: { message: 'Patient record linked to your account.', patient } });
   }),
 };

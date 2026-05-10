@@ -90,7 +90,7 @@ export class AppointmentsRepository {
        RETURNING *`,
       [
         data.patientId, data.doctorId, data.appointmentTypeId,
-        data.scheduledDate, data.startTime ?? data.scheduledStart,
+        data.scheduledDate, data.scheduledStart,
         endTime,
         data.notes ?? null,
         data.isWalkIn ?? false,

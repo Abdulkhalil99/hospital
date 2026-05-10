@@ -163,14 +163,20 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
 }
 
 function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: string) => string; onLinked: () => void }) {
-  const [patientId, setPatientId] = useState('');
-  const [msg,       setMsg]       = useState('');
-  const [loading,   setLoading]   = useState(false);
+  const [mrn, setMrn] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleLink(e: React.FormEvent) {
     e.preventDefault(); setLoading(true); setMsg('');
     try {
-      await api.post('/portal/link-patient', { patientId });
+      await api.post('/portal/link-patient', {
+        mrn,
+        ...(phone.trim() ? { phone: phone.trim() } : {}),
+        ...(dateOfBirth ? { dateOfBirth } : {}),
+      });
       setMsg('✅ Patient record linked successfully');
       setTimeout(onLinked, 1500);
     } catch (err: any) { setMsg(`❌ ${err.message}`); }
@@ -183,17 +189,28 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
         <div style={{ fontSize: 40, marginBottom: 10 }}>🔗</div>
         <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Link your patient record</div>
         <div style={{ fontSize: 13, color: '#888', lineHeight: 1.6 }}>
-          Enter your patient ID to connect your medical records to this portal account.
-          Ask the receptionist for your patient ID.
+          Use your MRN and either your registered mobile number or date of birth to connect your medical records to this portal account.
+          If you are unsure, the receptionist can confirm your MRN for you.
         </div>
       </div>
       <form onSubmit={handleLink}>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Patient ID</label>
-          <input value={patientId} onChange={e => setPatientId(e.target.value)} placeholder="Your patient UUID" required />
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>MRN</label>
+          <input value={mrn} onChange={e => setMrn(e.target.value)} placeholder="e.g. MC-000123" required />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Registered mobile number</label>
+          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone on file" />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Or date of birth</label>
+          <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+          <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
+            Provide at least one of the two verification fields above.
+          </div>
         </div>
         {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
-        <button type="submit" disabled={loading} style={{ width: '100%' }}>
+        <button type="submit" disabled={loading || !mrn.trim() || (!phone.trim() && !dateOfBirth)} style={{ width: '100%' }}>
           {loading ? t('dash.loading') : 'Link my record'}
         </button>
       </form>

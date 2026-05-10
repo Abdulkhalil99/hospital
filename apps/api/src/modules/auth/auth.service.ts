@@ -2,14 +2,16 @@ import bcrypt from 'bcrypt';
 import { AuthRepository } from './auth.repository';
 import { LoginInput, AuthTokens } from './auth.types';
 import {
-  signAccessToken, generateRefreshToken,
-  hashRefreshToken, refreshTokenExpiry,
+  signAccessToken,
+  signRefreshToken,
+  hashRefreshToken,
+  refreshTokenExpiry,
 } from '@/shared/utils/jwt.util';
 import { UnauthorizedError } from '@/shared/errors/app-error';
 import { logger } from '@/infrastructure/logger/logger';
 
-const MAX_ATTEMPTS  = 5;
-const LOCK_MINUTES  = 30;
+const MAX_ATTEMPTS = 5;
+const LOCK_MINUTES = 30;
 
 export class AuthService {
   private repo = new AuthRepository();
@@ -28,13 +30,13 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    if (!user.is_active || (user as any).is_deleted) {
+    if (!user.is_active) {
       throw new UnauthorizedError('Account is inactive');
     }
 
-    if (user.is_locked && user.locked_until && user.locked_until > new Date()) {
-      const mins = Math.ceil((user.locked_until.getTime() - Date.now()) / 60000);
-      throw new UnauthorizedError(`Account locked. Try again in ${mins} minute(s).`);
+    if (user.is_locked && user.locked_until && new Date(user.locked_until) > new Date()) {
+      const mins = Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 60000);
+      throw new UnauthorizedError(`Too many failed attempts. Account locked for ${mins} minute(s).`);
     }
 
     const valid = await bcrypt.compare(input.password, user.password_hash);
@@ -59,14 +61,14 @@ export class AuthService {
       this.repo.getUserPermissions(user.id),
     ]);
 
-    const accessToken        = signAccessToken({
+    const accessToken = signAccessToken({
       sub:         user.id,
       username:    user.username,
-      roles:       roles.map(r => r.name),
-      permissions: permissions.map(p => p.code),
+      roles:       roles.map((r: any) => r.name),
+      permissions: permissions.map((p: any) => p.code),
     });
 
-    const { raw, hash } = generateRefreshToken();
+    const { raw, hash } = signRefreshToken();
     const expiresAt     = refreshTokenExpiry();
 
     await this.repo.saveRefreshToken(user.id, hash, expiresAt, { ip, userAgent: ua });
@@ -94,11 +96,11 @@ export class AuthService {
 
     if (stored.revoked_at) {
       await this.repo.revokeAllUserTokens(stored.user_id);
-      logger.warn('Refresh token reuse — all tokens revoked', { userId: stored.user_id });
+      logger.warn('Refresh token reuse detected — all tokens revoked', { userId: stored.user_id });
       throw new UnauthorizedError('Session expired. Please log in again.');
     }
 
-    if (stored.expires_at < new Date()) {
+    if (new Date(stored.expires_at) < new Date()) {
       throw new UnauthorizedError('Refresh token expired. Please log in again.');
     }
 
@@ -112,22 +114,26 @@ export class AuthService {
       this.repo.getUserPermissions(user.id),
     ]);
 
-    const accessToken   = signAccessToken({
+    const accessToken = signAccessToken({
       sub:         user.id,
       username:    user.username,
-      roles:       roles.map(r => r.name),
-      permissions: permissions.map(p => p.code),
+      roles:       roles.map((r: any) => r.name),
+      permissions: permissions.map((p: any) => p.code),
     });
 
-    const { raw, hash } = generateRefreshToken();
+    const { raw, hash } = signRefreshToken();
     await this.repo.saveRefreshToken(user.id, hash, refreshTokenExpiry(), {});
 
     return { accessToken, refreshToken: raw, expiresIn: 15 * 60 };
   }
 
   async logout(rawToken: string): Promise<void> {
-    const tokenHash = hashRefreshToken(rawToken);
-    await this.repo.revokeRefreshToken(tokenHash);
+    try {
+      const tokenHash = hashRefreshToken(rawToken);
+      await this.repo.revokeRefreshToken(tokenHash);
+    } catch {
+      // Ignore errors on logout
+    }
   }
 
   async getMe(userId: string): Promise<object> {
@@ -146,8 +152,8 @@ export class AuthService {
       fullName:           user.full_name,
       preferredLanguage:  user.preferred_language,
       mustChangePassword: user.must_change_password,
-      roles:              roles.map(r => r.name),
-      permissions:        permissions.map(p => p.code),
+      roles:              roles.map((r: any) => r.name),
+      permissions:        permissions.map((p: any) => p.code),
     };
   }
 
