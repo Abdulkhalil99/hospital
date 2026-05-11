@@ -230,3 +230,5 @@ What still needs polish:
 ## Disclaimer
 
 This software is not medical advice and should not be used in a real hospital or patient-care environment without a full engineering, security, legal, privacy, and clinical review.
+
+it is almost complete 
