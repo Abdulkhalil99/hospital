@@ -84,3 +84,19 @@ export function resolveNav(
     path:  `/${locale}${d.path}`,
   }));
 }
+
+// Get nav for a role
+export function getNavForRole(role: string): NavDef[] {
+  switch (role) {
+    case 'doctor':       return DOCTOR_NAV;
+    case 'admin':        return ADMIN_NAV;
+    case 'receptionist': return RECEPTIONIST_NAV;
+    case 'pharmacy':     return PHARMACY_NAV;
+    case 'lab':          return LAB_NAV;
+    case 'nurse':        return NURSE_NAV;
+    case 'billing':      return BILLING_NAV;
+    case 'emergency':    return EMERGENCY_NAV;
+    case 'patient':      return PATIENT_NAV;
+    default:            return [];
+  }
+}
