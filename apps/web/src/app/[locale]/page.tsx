@@ -14,17 +14,13 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [password, setPassword] = useState('Admin@123456');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
-  const [mounted,  setMounted]  = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const session = getSession();
     if (session?.accessToken) {
       router.replace(getDashboardPath(session.user.roles, locale));
     }
-  }, []);
-
-  if (!mounted) return null;
+  }, [locale, router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault(); setError(''); setLoading(true);

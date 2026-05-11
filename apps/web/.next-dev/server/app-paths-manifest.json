@@ -1,8 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/[locale]/dashboard/admin/doctors/page": "app/[locale]/dashboard/admin/doctors/page.js",
-  "/[locale]/dashboard/admin/page": "app/[locale]/dashboard/admin/page.js",
-  "/[locale]/dashboard/admin/reports/page": "app/[locale]/dashboard/admin/reports/page.js",
-  "/[locale]/dashboard/admin/patients/page": "app/[locale]/dashboard/admin/patients/page.js",
-  "/[locale]/page": "app/[locale]/page.js"
-}

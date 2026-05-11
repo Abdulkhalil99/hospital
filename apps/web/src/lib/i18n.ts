@@ -341,14 +341,33 @@ export function useT(locale: string) {
   const msgs = MESSAGES[loc]  ?? MESSAGES.en;
 
   return function t(key: string, ns = 'common'): string {
-    // Check dashboard namespace first
+    // Dashboard keys are stored as full dotted ids like `nav.overview`.
     if (dash[key]) return dash[key];
-    // Then check namespace
-    const ns_obj = msgs[ns] as Record<string, string> | undefined;
-    if (ns_obj?.[key]) return ns_obj[key];
-    // Fallback to English
-    const en_ns = MESSAGES.en[ns] as Record<string, string> | undefined;
-    return en_ns?.[key] ?? DASHBOARD.en[key] ?? key;
+
+    let resolvedNamespace = ns;
+    let resolvedKey = key;
+
+    // Allow callers to pass dotted keys like `auth.username` or `patients.years`.
+    if (key.includes('.')) {
+      const [prefix, ...rest] = key.split('.');
+      const nestedKey = rest.join('.');
+
+      if ((prefix === 'nav' || prefix === 'dash') && dash[key]) {
+        return dash[key];
+      }
+
+      if (nestedKey && msgs[prefix]) {
+        resolvedNamespace = prefix;
+        resolvedKey = nestedKey;
+      }
+    }
+
+    const nsObj = msgs[resolvedNamespace] as Record<string, string> | undefined;
+    if (nsObj?.[resolvedKey]) return nsObj[resolvedKey];
+
+    // Fallback to English for the resolved namespace/key pair.
+    const enNs = MESSAGES.en[resolvedNamespace] as Record<string, string> | undefined;
+    return enNs?.[resolvedKey] ?? DASHBOARD.en[key] ?? key;
   };
 }
 
