@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/[locale]/dashboard/admin/page": [
+    "/[locale]/dashboard/admin/patients/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/admin/page.js"
+      "static/chunks/app/[locale]/dashboard/admin/patients/page.js"
     ],
     "/[locale]/layout": [
       "static/chunks/webpack.js",
@@ -16,15 +16,25 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/[locale]/page": [
+    "/global-error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/page.js"
+      "static/chunks/app/global-error.js"
     ],
-    "/[locale]/dashboard/admin/doctors/page": [
+    "/error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/admin/doctors/page.js"
+      "static/chunks/app/error.js"
+    ],
+    "/not-found": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/not-found.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
