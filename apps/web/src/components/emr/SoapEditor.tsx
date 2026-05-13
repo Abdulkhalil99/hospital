@@ -7,6 +7,7 @@ interface SoapData {
   assessment: string;
   plan:       string;
 }
+//add some comments for this file
 
 interface SoapEditorProps {
   encounterId: string;
