@@ -191,3 +191,6 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
     </form>
   );
 }
+
+
+// this file has error to solve later 
