@@ -8,6 +8,7 @@ import fa_patients  from '@/i18n/fa/patients.json';
 import fa_auth      from '@/i18n/fa/auth.json';
 import fa_emr       from '@/i18n/fa/emr.json';
 
+//commet
 import ps_common    from '@/i18n/ps/common.json';
 import ps_patients  from '@/i18n/ps/patients.json';
 import ps_auth      from '@/i18n/ps/auth.json';
