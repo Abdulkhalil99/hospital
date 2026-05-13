@@ -5,6 +5,7 @@ type ErrorPageProps = {
   reset: () => void;
 };
 
+// solve some problems that exist 
 export default function RootError({ error, reset }: ErrorPageProps) {
   return (
     <div
