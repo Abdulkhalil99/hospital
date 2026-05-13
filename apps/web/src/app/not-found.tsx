@@ -50,3 +50,4 @@ export default function NotFound() {
     </div>
   );
 }
+// this page is for those pages that doesn't exist in the system 
