@@ -3,6 +3,8 @@
 
 export type NavDef = { labelKey: string; icon: string; path: string };
 
+//we should add some comments for this file to make it more clear for other developers who will work on this file in the future
+
 export const DOCTOR_NAV: NavDef[] = [
   { labelKey: 'nav.queue',         icon: '📋', path: '/dashboard/doctor' },
   { labelKey: 'nav.appointments',  icon: '📅', path: '/dashboard/doctor/appointments' },
