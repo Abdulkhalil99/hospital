@@ -18,6 +18,7 @@ export const ADMIN_NAV: NavDef[] = [
   { labelKey: 'nav.overview',      icon: '🏠', path: '/dashboard/admin' },
   { labelKey: 'nav.patients',      icon: '👥', path: '/dashboard/admin/patients' },
   { labelKey: 'nav.doctors',       icon: '👨‍⚕️', path: '/dashboard/admin/doctors' },
+  { labelKey: 'nav.users',         icon: '🧑‍💼', path: '/dashboard/admin/users' },
   { labelKey: 'nav.appointments',  icon: '📅', path: '/dashboard/admin/appointments' },
   { labelKey: 'nav.billing',       icon: '💰', path: '/dashboard/admin/billing' },
   { labelKey: 'nav.reports',       icon: '📊', path: '/dashboard/admin/reports' },
