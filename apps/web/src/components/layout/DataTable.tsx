@@ -1,4 +1,6 @@
 'use client';
+import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 interface Column<T> {
   key:     string;
@@ -18,9 +20,13 @@ interface DataTableProps<T> {
 export function DataTable<T extends Record<string, unknown>>({
   columns, rows, loading, empty = 'No data found', keyField,
 }: DataTableProps<T>) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
+
   if (loading) return (
     <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: 40, textAlign: 'center', color: '#aaa' }}>
-      Loading…
+      {t('dash.loading')}
     </div>
   );
 
@@ -45,7 +51,7 @@ export function DataTable<T extends Record<string, unknown>>({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={columns.length} style={{ padding: 40, textAlign: 'center', color: '#aaa' }}>
-                  {empty}
+                  {empty === 'No data found' ? t('dash.nodata') : empty}
                 </td>
               </tr>
             )}

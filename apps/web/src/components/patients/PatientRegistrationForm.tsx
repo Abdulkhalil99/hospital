@@ -1,10 +1,15 @@
 'use client';
 import { useState }          from 'react';
+import { useParams }         from 'next/navigation';
 import { patientsService }   from '@/services/patients.service';
+import { useT }              from '@/lib/i18n';
 
 type Step = 'form' | 'otp' | 'done';
 
 export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: string) => void }) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
   const [step,     setStep]     = useState<Step>('form');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
@@ -42,7 +47,7 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
         onSuccess?.(result.patient.mrn);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : t('Registration failed'));
     } finally { setLoading(false); }
   }
 
@@ -54,7 +59,7 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
       setStep('done');
       onSuccess?.(mrn);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid code');
+      setError(err instanceof Error ? err.message : t('Invalid code'));
     } finally { setLoading(false); }
   }
 
@@ -63,9 +68,9 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
     try {
       const type = form.email ? 'email' : 'phone';
       await patientsService.resendOtp(patientId, otpTarget, type);
-      setError('New code sent.');
+      setError(t('New code sent.'));
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to resend');
+      setError(err instanceof Error ? err.message : t('Failed to resend'));
     } finally { setLoading(false); }
   }
 
@@ -93,10 +98,10 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
     <div style={{ textAlign: 'center', padding: '2rem 0' }}>
       <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
       <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--color-text-primary)' }}>
-        Patient registered
+        {t('Patient registered')}
       </div>
       <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 4 }}>
-        MRN: <strong>{mrn}</strong>
+        {t('dash.mrn')}: <strong>{mrn}</strong>
       </div>
     </div>
   );
@@ -104,15 +109,14 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
   if (step === 'otp') return (
     <form onSubmit={handleVerifyOtp}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Verify contact</div>
+        <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{t('Verify contact')}</div>
         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-          A 6-digit code was sent to <strong>{otpTarget}</strong>.
-          It expires in 10 minutes.
+          {t('A 6-digit code was sent to {{target}}. It expires in 10 minutes.', { target: otpTarget })}
         </div>
       </div>
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-          Verification code *
+          {t('Verification code *')}
         </label>
         <input
           type="text"
@@ -127,12 +131,12 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
       </div>
       {error && <div style={{ fontSize: 12, color: 'var(--color-text-danger)', marginBottom: 8 }}>{error}</div>}
       <button type="submit" disabled={loading || otpCode.length < 6} style={{ width: '100%', marginBottom: 8 }}>
-        {loading ? 'Verifying...' : 'Verify'}
+        {loading ? t('Verifying...') : t('Verify')}
       </button>
       <button type="button" onClick={handleResend} disabled={loading}
         style={{ width: '100%', background: 'transparent', border: 'none', fontSize: 12,
                  color: 'var(--color-text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}>
-        Resend code
+        {t('Resend code')}
       </button>
     </form>
   );
@@ -140,23 +144,23 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
   return (
     <form onSubmit={handleRegister}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-        <div>{field('First name', 'firstName', 'text', true)}</div>
-        <div>{field('Last name',  'lastName',  'text', true)}</div>
+        <div>{field(t('First name'), 'firstName', 'text', true)}</div>
+        <div>{field(t('Last name'),  'lastName',  'text', true)}</div>
       </div>
-      {field('Date of birth', 'dateOfBirth', 'date', true)}
+      {field(t('dash.dob'), 'dateOfBirth', 'date', true)}
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-          Gender *
+          {t('dash.gender')} *
         </label>
         <select value={form.gender} onChange={e => set('gender', e.target.value)} style={{ width: '100%' }}>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
+          <option value="male">{t('Male')}</option>
+          <option value="female">{t('Female')}</option>
+          <option value="other">{t('Other')}</option>
         </select>
       </div>
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-          Blood type
+          {t('dash.blood')}
         </label>
         <select value={form.bloodType} onChange={e => set('bloodType', e.target.value)} style={{ width: '100%' }}>
           {['unknown','A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bt => (
@@ -164,13 +168,13 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
           ))}
         </select>
       </div>
-      {field('Phone *', 'phone', 'tel', true)}
-      {field('Email',   'email', 'email')}
-      {field('National ID', 'nationalId')}
-      {field('Address', 'address')}
+      {field(`${t('dash.phone')} *`, 'phone', 'tel', true)}
+      {field(t('Email'), 'email', 'email')}
+      {field(t('National ID'), 'nationalId')}
+      {field(t('Address'), 'address')}
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: 'block', fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-          Preferred language
+          {t('Preferred language')}
         </label>
         <select value={form.preferredLanguage} onChange={e => set('preferredLanguage', e.target.value)} style={{ width: '100%' }}>
           <option value="fa">Persian — فارسی</option>
@@ -182,11 +186,11 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
                       color: 'var(--color-text-secondary)', marginBottom: 16, cursor: 'pointer' }}>
         <input type="checkbox" checked={form.skipOtp}
                onChange={e => set('skipOtp', e.target.checked)} />
-        Emergency walk-in — skip OTP verification
+        {t('Emergency walk-in — skip OTP verification')}
       </label>
       {error && <div style={{ fontSize: 12, color: 'var(--color-text-danger)', marginBottom: 8 }}>{error}</div>}
       <button type="submit" disabled={loading} style={{ width: '100%' }}>
-        {loading ? 'Registering...' : 'Register patient'}
+        {loading ? t('Registering…') : t('dash.register')}
       </button>
     </form>
   );

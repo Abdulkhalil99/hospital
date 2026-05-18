@@ -6,11 +6,11 @@ import { useT } from '@/lib/i18n';
 import { resolveNav, NURSE_NAV } from '@/lib/nav';
 
 const ESI_COLORS = ['', '#991b1b', '#ea580c', '#ca8a04', '#16a34a', '#2563eb'];
-const ESI_LABELS = ['', 'Immediate', 'Emergent', 'Urgent', 'Less urgent', 'Non-urgent'];
 
 export default function Page({ params: { locale } }: { params: { locale: string } }) {
   const t = useT(locale);
   const nav = resolveNav(NURSE_NAV, locale, t);
+  const esiLabels = ['', t('Immediate'), t('Emergent'), t('Urgent'), t('Less urgent'), t('Non-urgent')];
 
   const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState('');
@@ -79,9 +79,9 @@ export default function Page({ params: { locale } }: { params: { locale: string 
       const visit = await api.post<any>('/emergency/visits', body);
       setVisitId(String(visit.id));
       setStep('triage');
-      setMsg('Patient registered. Continue with triage assessment.');
+      setMsg(t('Patient registered. Continue with triage assessment.'));
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to register patient.');
+      setMsg(err.message ?? t('Failed to register patient.'));
     } finally {
       setLoading(false);
     }
@@ -148,17 +148,17 @@ export default function Page({ params: { locale } }: { params: { locale: string 
       setSearch('');
       setPatients([]);
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to complete triage.');
+      setMsg(err.message ?? t('Failed to complete triage.'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Triage" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.triage')} locale={locale}>
       <div style={{ maxWidth: 780 }}>
         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '14px 18px', marginBottom: 18, fontSize: 13, color: '#1e3a8a' }}>
-          This nurse triage flow covers rapid ED intake: patient registration, severity assignment, and first-set vitals for emergency routing.
+          {t('This nurse triage flow covers rapid ED intake: patient registration, severity assignment, and first-set vitals for emergency routing.')}
         </div>
 
         {msg && (
@@ -177,11 +177,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         {step === 'register' && (
           <form onSubmit={handleRegister}>
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px' }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>Step 1 — Register emergency visit</div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>{t('Step 1 — Register emergency visit')}</div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Search existing patient</label>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, MRN, or phone..." />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Search existing patient')}</label>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('Name, MRN, or phone...')} />
                 {patients.length > 0 && (
                   <div style={{ border: '1px solid #e8e8e8', borderTop: 'none', borderRadius: '0 0 8px 8px' }}>
                     {patients.map((patient) => (
@@ -196,7 +196,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                       >
                         <span style={{ fontFamily: 'monospace', color: '#185FA5', fontWeight: 600 }}>{patient.mrn}</span>
                         <span>{patient.first_name} {patient.last_name}</span>
-                        {patient.has_allergies && <span style={{ marginLeft: 'auto', color: '#991b1b', fontSize: 11 }}>Allergy</span>}
+                        {patient.has_allergies && <span style={{ marginLeft: 'auto', color: '#991b1b', fontSize: 11 }}>{t('dash.allergy')}</span>}
                       </div>
                     ))}
                   </div>
@@ -205,44 +205,44 @@ export default function Page({ params: { locale } }: { params: { locale: string 
 
               {!register.patientId && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14, padding: 14, background: '#fafafa', borderRadius: 8 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280', gridColumn: '1/-1' }}>Or register as an unknown emergency patient.</div>
+                  <div style={{ fontSize: 12, color: '#6b7280', gridColumn: '1/-1' }}>{t('Or register as an unknown emergency patient.')}</div>
                   <div>
-                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Name</label>
+                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{t('dash.name')}</label>
                     <input value={register.unknownName} onChange={(e) => setRegister((prev) => ({ ...prev, unknownName: e.target.value }))} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Estimated age</label>
+                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{t('Estimated age')}</label>
                     <input type="number" value={register.unknownAge} onChange={(e) => setRegister((prev) => ({ ...prev, unknownAge: e.target.value }))} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>Gender</label>
+                    <label style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{t('dash.gender')}</label>
                     <select value={register.unknownGender} onChange={(e) => setRegister((prev) => ({ ...prev, unknownGender: e.target.value }))}>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value="male">{t('Male')}</option>
+                      <option value="female">{t('Female')}</option>
+                      <option value="other">{t('Other')}</option>
                     </select>
                   </div>
                 </div>
               )}
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Chief complaint *</label>
-                <input value={register.chiefComplaint} onChange={(e) => setRegister((prev) => ({ ...prev, chiefComplaint: e.target.value }))} required placeholder="e.g. chest pain, breathing difficulty" />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Chief complaint *')}</label>
+                <input value={register.chiefComplaint} onChange={(e) => setRegister((prev) => ({ ...prev, chiefComplaint: e.target.value }))} required placeholder={t('e.g. chest pain, breathing difficulty')} />
               </div>
 
               <div style={{ marginBottom: 18 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Arrival mode</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('dash.arrivalmode')}</label>
                 <select value={register.arrivalMode} onChange={(e) => setRegister((prev) => ({ ...prev, arrivalMode: e.target.value }))}>
-                  <option value="walk_in">Walk in</option>
-                  <option value="ambulance">Ambulance</option>
-                  <option value="police">Police</option>
-                  <option value="transfer">Transfer</option>
-                  <option value="other">Other</option>
+                  <option value="walk_in">{t('Walk in')}</option>
+                  <option value="ambulance">{t('Ambulance')}</option>
+                  <option value="police">{t('Police')}</option>
+                  <option value="transfer">{t('Transfer')}</option>
+                  <option value="other">{t('Other')}</option>
                 </select>
               </div>
 
               <button type="submit" disabled={loading || !register.chiefComplaint.trim()}>
-                {loading ? 'Registering…' : 'Continue to triage'}
+                {loading ? t('Registering…') : t('Continue to triage')}
               </button>
             </div>
           </form>
@@ -251,10 +251,10 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         {step === 'triage' && (
           <form onSubmit={handleTriage}>
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px' }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>Step 2 — Triage assessment</div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>{t('Step 2 — Triage assessment')}</div>
 
               <div style={{ marginBottom: 18 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 10 }}>ESI severity level *</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 10 }}>{t('ESI severity level *')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[1, 2, 3, 4, 5].map((level) => (
                     <button
@@ -277,20 +277,20 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                   ))}
                 </div>
                 <div style={{ marginTop: 8, fontSize: 13, fontWeight: 500, color: ESI_COLORS[triage.esiLevel] }}>
-                  ESI {triage.esiLevel}: {ESI_LABELS[triage.esiLevel]}
+                  ESI {triage.esiLevel}: {esiLabels[triage.esiLevel]}
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
                 {[
-                  ['temperatureC', 'Temp (°C)'],
-                  ['bpSystolic', 'BP systolic'],
-                  ['bpDiastolic', 'BP diastolic'],
-                  ['pulseBpm', 'Pulse'],
-                  ['respiratoryRate', 'Resp. rate'],
-                  ['o2Saturation', 'O2 sat %'],
+                  ['temperatureC', t('Temp (°C)')],
+                  ['bpSystolic', t('BP systolic')],
+                  ['bpDiastolic', t('BP diastolic')],
+                  ['pulseBpm', t('emr.pulse')],
+                  ['respiratoryRate', t('Resp. rate')],
+                  ['o2Saturation', t('O2 sat %')],
                   ['gcsScore', 'GCS'],
-                  ['painScore', 'Pain 0-10'],
+                  ['painScore', t('Pain 0-10')],
                 ].map(([key, label]) => (
                   <div key={key}>
                     <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{label}</label>
@@ -300,10 +300,10 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               </div>
 
               <div style={{ display: 'grid', gap: 12, marginBottom: 18 }}>
-                <input value={triage.mechanismOfInjury} onChange={(e) => setTriage((prev) => ({ ...prev, mechanismOfInjury: e.target.value }))} placeholder="Mechanism of injury (optional)" />
-                <input value={triage.allergiesNoted} onChange={(e) => setTriage((prev) => ({ ...prev, allergiesNoted: e.target.value }))} placeholder="Known allergies (optional)" />
-                <input value={triage.medicationsNoted} onChange={(e) => setTriage((prev) => ({ ...prev, medicationsNoted: e.target.value }))} placeholder="Current medications (optional)" />
-                <textarea rows={3} value={triage.triageNotes} onChange={(e) => setTriage((prev) => ({ ...prev, triageNotes: e.target.value }))} placeholder="Triage notes..." />
+                <input value={triage.mechanismOfInjury} onChange={(e) => setTriage((prev) => ({ ...prev, mechanismOfInjury: e.target.value }))} placeholder={t('Mechanism of injury (optional)')} />
+                <input value={triage.allergiesNoted} onChange={(e) => setTriage((prev) => ({ ...prev, allergiesNoted: e.target.value }))} placeholder={t('Known allergies (optional)')} />
+                <input value={triage.medicationsNoted} onChange={(e) => setTriage((prev) => ({ ...prev, medicationsNoted: e.target.value }))} placeholder={t('Current medications (optional)')} />
+                <textarea rows={3} value={triage.triageNotes} onChange={(e) => setTriage((prev) => ({ ...prev, triageNotes: e.target.value }))} placeholder={t('Triage notes...')} />
               </div>
 
               <button
@@ -311,7 +311,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                 disabled={loading}
                 style={{ background: ESI_COLORS[triage.esiLevel], borderColor: ESI_COLORS[triage.esiLevel] }}
               >
-                {loading ? 'Saving…' : `Complete triage — ESI ${triage.esiLevel}`}
+                {loading ? t('dash.loading') : t('Complete triage — ESI {{level}}', { level: triage.esiLevel })}
               </button>
             </div>
           </form>

@@ -34,7 +34,7 @@ export default function MyPrescriptions({ params: { locale } }: { params: { loca
 
       {/* Filter */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-        {[['all','All'],['pending','Pending'],['dispensed','Dispensed'],['cancelled','Cancelled']].map(([val, label]) => (
+        {[['all', t('All')], ['pending', t('pending')], ['dispensed', t('dispensed')], ['cancelled', t('cancelled')]].map(([val, label]) => (
           <button key={val} onClick={() => setFilter(val)}
             style={{ padding: '7px 16px', fontSize: 12, borderRadius: 7, border: 'none', cursor: 'pointer', background: filter === val ? '#185FA5' : '#f0f0f0', color: filter === val ? '#fff' : '#555' }}>
             {label}
@@ -45,7 +45,7 @@ export default function MyPrescriptions({ params: { locale } }: { params: { loca
       {filtered.length === 0 && (
         <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>💊</div>
-          <div>No prescriptions found</div>
+          <div>{t('No prescriptions found')}</div>
         </div>
       )}
 
@@ -60,7 +60,7 @@ export default function MyPrescriptions({ params: { locale } }: { params: { loca
                 )}
               </div>
               <Badge
-                label={rx.status}
+                label={t(String(rx.status))}
                 preset={rx.status === 'dispensed' ? 'success' : rx.status === 'cancelled' ? 'danger' : 'warning'}
               />
             </div>
@@ -71,7 +71,7 @@ export default function MyPrescriptions({ params: { locale } }: { params: { loca
                 [t('dash.frequency'), rx.frequency],
                 [t('dash.route'),     rx.route],
                 [t('dash.quantity'),  `${rx.quantity} ${rx.unit}`],
-                rx.duration_days ? ['Duration', `${rx.duration_days} days`] : null,
+                rx.duration_days ? [t('Duration'), `${rx.duration_days} ${t('days')}`] : null,
               ].filter(Boolean).map(([label, value]: any) => (
                 <div key={label} style={{ background: '#f8f9fa', borderRadius: 6, padding: '7px 10px' }}>
                   <div style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>{label}</div>
@@ -87,7 +87,7 @@ export default function MyPrescriptions({ params: { locale } }: { params: { loca
             )}
 
             <div style={{ marginTop: 10, fontSize: 11, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
-              <span>Dr. {rx.prescribed_by_name}</span>
+              <span>{t('dash.doctor')}: {rx.prescribed_by_name}</span>
               <span>{formatDate(rx.encounter_date, locale)}</span>
             </div>
           </div>

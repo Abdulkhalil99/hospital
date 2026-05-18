@@ -35,8 +35,8 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
       {totalOutstanding > 0 && (
         <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '14px 18px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#991b1b' }}>Outstanding balance</div>
-            <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 2 }}>Please visit the cashier to settle your account</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#991b1b' }}>{t('Outstanding balance')}</div>
+            <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 2 }}>{t('Please visit the cashier to settle your account')}</div>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#991b1b' }}>
             AFN {totalOutstanding.toLocaleString()}
@@ -51,7 +51,7 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
           {invoices.length === 0 && (
             <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>💰</div>
-              <div>No invoices found</div>
+              <div>{t('No invoices found')}</div>
             </div>
           )}
           {invoices.map((inv: any) => (
@@ -61,7 +61,7 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
                   <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'monospace', color: '#185FA5' }}>{inv.invoice_number}</div>
                   <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
                     {formatDate(inv.issued_at ?? inv.created_at, locale)}
-                    {inv.due_date && ` · Due: ${formatDate(inv.due_date, locale)}`}
+                    {inv.due_date && ` · ${t('Due')}: ${formatDate(inv.due_date, locale)}`}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -69,16 +69,16 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
                     <div style={{ fontSize: 16, fontWeight: 700 }}>AFN {Number(inv.total_amount).toLocaleString()}</div>
                     {Number(inv.balance_due) > 0 && (
                       <div style={{ fontSize: 12, color: '#991b1b', fontWeight: 600 }}>
-                        Balance: AFN {Number(inv.balance_due).toLocaleString()}
+                        {t('dash.balance')}: AFN {Number(inv.balance_due).toLocaleString()}
                       </div>
                     )}
                   </div>
                   <Badge
-                    label={inv.status}
+                    label={t(String(inv.status))}
                     preset={inv.status === 'paid' ? 'success' : inv.status === 'partial' ? 'warning' : inv.status === 'cancelled' ? 'gray' : 'danger'}
                   />
                   <button onClick={() => openDetail(inv.id)} style={{ fontSize: 12, padding: '5px 14px', background: '#f0f0f0', color: '#333' }}>
-                    Details
+                    {t('Details')}
                   </button>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
 
             {/* Line items */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Items</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('Items')}</div>
               {detail.items.map((item: any, i: number) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
                   <span>{item.description}</span>
@@ -113,13 +113,13 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
             {/* Totals */}
             <div style={{ background: '#f8f9fa', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
               {[
-                ['Subtotal',  detail.invoice.subtotal],
-                ['Discount',  detail.invoice.discount_amount],
-                ['Total',     detail.invoice.total_amount],
-                ['Paid',      detail.invoice.paid_amount],
-                ['Balance due', detail.invoice.balance_due],
+                [t('Subtotal'),  detail.invoice.subtotal],
+                [t('Discount'),  detail.invoice.discount_amount],
+                [t('dash.total'), detail.invoice.total_amount],
+                [t('dash.paid'), detail.invoice.paid_amount],
+                [t('Balance due'), detail.invoice.balance_due],
               ].map(([label, value]) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', fontWeight: String(label) === 'Balance due' ? 700 : 400, color: String(label) === 'Balance due' && Number(value) > 0 ? '#991b1b' : '#333' }}>
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', fontWeight: label === t('Balance due') ? 700 : 400, color: label === t('Balance due') && Number(value) > 0 ? '#991b1b' : '#333' }}>
                   <span>{label}</span>
                   <span>AFN {Number(value).toLocaleString()}</span>
                 </div>
@@ -129,7 +129,7 @@ export default function MyBills({ params: { locale } }: { params: { locale: stri
             {/* Payments */}
             {detail.payments.length > 0 && (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Payments received</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('Payments received')}</div>
                 {detail.payments.map((p: any, i: number) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
                     <div>

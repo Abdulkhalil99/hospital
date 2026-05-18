@@ -65,104 +65,104 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   });
 
   return (
-    <DashboardShell navItems={nav} title="Patients" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.patients')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Checked in OPD" value={appointments.length} icon="✅" color="#0F6E56" />
-        <StatCard label="Active ED" value={emergencyVisits.length} icon="🚨" color="#991b1b" />
-        <StatCard label="Critical ED" value={emergencyVisits.filter((visit) => [1, 2].includes(Number(visit.triage_level))).length} icon="⚡" color="#854F0B" />
-        <StatCard label="Bedded ED" value={emergencyVisits.filter((visit) => visit.bed_code).length} icon="🛏️" color="#185FA5" />
+        <StatCard label={t('Checked in OPD')} value={appointments.length} icon="✅" color="#0F6E56" />
+        <StatCard label={t('Active ED')} value={emergencyVisits.length} icon="🚨" color="#991b1b" />
+        <StatCard label={t('Critical ED')} value={emergencyVisits.filter((visit) => [1, 2].includes(Number(visit.triage_level))).length} icon="⚡" color="#854F0B" />
+        <StatCard label={t('Bedded ED')} value={emergencyVisits.filter((visit) => visit.bed_code).length} icon="🛏️" color="#185FA5" />
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search patient, MRN, doctor, bed, or complaint..."
+          placeholder={t('Search patient, MRN, doctor, bed, or complaint...')}
         />
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Outpatient patients awaiting nursing support</div>
+        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Outpatient patients awaiting nursing support')}</div>
         <DataTable
           keyField="id"
           loading={loading}
           rows={filteredAppointments}
-          empty="No checked-in outpatient patients."
+          empty={t('No checked-in outpatient patients.')}
           columns={[
             {
               key: 'patient_name',
-              label: 'Patient',
+              label: t('dash.patient'),
               render: (row) => <strong>{String(row.patient_name ?? '—')}</strong>,
             },
             {
               key: 'patient_mrn',
-              label: 'MRN',
+              label: t('dash.mrn'),
               width: '130px',
               render: (row) => <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.patient_mrn ?? '—')}</span>,
             },
-            { key: 'doctor_name', label: 'Doctor' },
+            { key: 'doctor_name', label: t('dash.doctor') },
             {
               key: 'scheduled_start',
-              label: 'Time',
+              label: t('dash.time'),
               width: '90px',
               render: (row) => <span style={{ fontFamily: 'monospace' }}>{String(row.scheduled_start ?? '').slice(0, 5)}</span>,
             },
             {
               key: 'status',
-              label: 'Status',
+              label: t('dash.status'),
               width: '110px',
-              render: (row) => <Badge label={String(row.status ?? 'checked_in')} preset="warning" />,
+              render: (row) => <Badge label={t(String(row.status ?? 'checked_in'))} preset="warning" />,
             },
           ]}
         />
       </div>
 
       <div>
-        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Emergency department active patients</div>
+        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Emergency department active patients')}</div>
         <DataTable
           keyField="id"
           loading={loading}
           rows={filteredEmergency}
-          empty="No active emergency visits."
+          empty={t('No active emergency visits.')}
           columns={[
             {
               key: 'patient_name',
-              label: 'Patient',
+              label: t('dash.patient'),
               render: (row) => (
                 <div>
-                  <strong>{String(row.patient_name ?? 'Unknown patient')}</strong>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.patient_mrn ?? 'No MRN')}</div>
+                  <strong>{String(row.patient_name ?? t('Unknown patient'))}</strong>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.patient_mrn ?? t('No MRN'))}</div>
                 </div>
               ),
             },
-            { key: 'chief_complaint', label: 'Complaint' },
+            { key: 'chief_complaint', label: t('dash.complaint') },
             {
               key: 'triage_level',
               label: 'ESI',
               width: '90px',
               render: (row) => row.triage_level
                 ? <Badge label={`ESI ${row.triage_level}`} preset={esiPreset(Number(row.triage_level)) as any} />
-                : <Badge label="Untriaged" preset="gray" />,
+                : <Badge label={t('Untriaged')} preset="gray" />,
             },
             {
               key: 'bed_code',
-              label: 'Bed',
+              label: t('dash.bed'),
               width: '90px',
               render: (row) => row.bed_code
                 ? <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.bed_code)}</span>
-                : <span style={{ color: '#9ca3af' }}>Unassigned</span>,
+                : <span style={{ color: '#9ca3af' }}>{t('Unassigned')}</span>,
             },
             {
               key: 'minutes_in_ed',
-              label: 'Time in ED',
+              label: t('dash.timined'),
               width: '100px',
               render: (row) => <span>{Math.floor(Number(row.minutes_in_ed ?? 0))}m</span>,
             },
             {
               key: 'status',
-              label: 'Status',
+              label: t('dash.status'),
               width: '110px',
-              render: (row) => <Badge label={String(row.status ?? 'arrived')} preset="info" />,
+              render: (row) => <Badge label={t(String(row.status ?? 'arrived'))} preset="info" />,
             },
           ]}
         />

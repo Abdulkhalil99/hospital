@@ -63,7 +63,7 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
             {profile?.first_name} {profile?.last_name}
           </div>
           <div style={{ fontSize: 13, opacity: .85 }}>
-            MRN: <strong>{profile?.mrn}</strong>
+            {t('dash.mrn')}: <strong>{profile?.mrn}</strong>
             {age && ` · ${age} ${t('patients.years')}`}
             {profile?.blood_type && ` · ${profile.blood_type}`}
           </div>
@@ -82,7 +82,7 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
         <StatCard label={t('emr.encounters')}    value={Number(profile?.total_visits ?? 0)} icon="📋" color="#185FA5" />
         <StatCard label={t('patients.allergies')} value={allergies.length}                  icon="⚠️" color={allergies.length > 0 ? '#991b1b' : '#888'} />
-        <StatCard label="Last visit" value={profile?.last_visit ? formatDate(profile.last_visit, locale) : '—'} icon="📅" color="#0F6E56" />
+        <StatCard label={t('Last visit')} value={profile?.last_visit ? formatDate(profile.last_visit, locale) : '—'} icon="📅" color="#0F6E56" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -105,7 +105,7 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
         {/* Recent diagnoses */}
         {summary?.diagnoses?.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '18px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Recent diagnoses</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Recent diagnoses')}</div>
             {summary.diagnoses.slice(0, 5).map((d: any, i: number) => (
               <div key={i} style={{ display: 'flex', gap: 10, padding: '7px 0', borderBottom: i < 4 ? '1px solid #f5f5f5' : 'none', fontSize: 13 }}>
                 <span style={{ fontFamily: 'monospace', color: '#185FA5', fontWeight: 600, flexShrink: 0 }}>{d.icd10_code}</span>
@@ -118,7 +118,7 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
         {/* Recent vitals */}
         {summary?.recentVitals?.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '18px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Latest vitals</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Latest vitals')}</div>
             {(() => {
               const v = summary.recentVitals[0];
               return (
@@ -145,7 +145,7 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
         {/* Recent encounters */}
         {summary?.recentEncounters?.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '18px 20px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Recent visits</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Recent visits')}</div>
             {summary.recentEncounters.map((e: any, i: number) => (
               <div key={i} style={{ padding: '8px 0', borderBottom: i < summary.recentEncounters.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
@@ -177,7 +177,7 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
         ...(phone.trim() ? { phone: phone.trim() } : {}),
         ...(dateOfBirth ? { dateOfBirth } : {}),
       });
-      setMsg('✅ Patient record linked successfully');
+      setMsg(`✅ ${t('Patient record linked successfully')}`);
       setTimeout(onLinked, 1500);
     } catch (err: any) { setMsg(`❌ ${err.message}`); }
     setLoading(false);
@@ -187,31 +187,30 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
     <div style={{ maxWidth: 480, margin: '60px auto', background: '#fff', borderRadius: 14, border: '1px solid #e8e8e8', padding: '32px 28px' }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <div style={{ fontSize: 40, marginBottom: 10 }}>🔗</div>
-        <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Link your patient record</div>
+        <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>{t('Link your patient record')}</div>
         <div style={{ fontSize: 13, color: '#888', lineHeight: 1.6 }}>
-          Use your MRN and either your registered mobile number or date of birth to connect your medical records to this portal account.
-          If you are unsure, the receptionist can confirm your MRN for you.
+          {t('Use your MRN and either your registered mobile number or date of birth to connect your medical records to this portal account. If you are unsure, the receptionist can confirm your MRN for you.')}
         </div>
       </div>
       <form onSubmit={handleLink}>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>MRN</label>
-          <input value={mrn} onChange={e => setMrn(e.target.value)} placeholder="e.g. MC-000123" required />
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('dash.mrn')}</label>
+          <input value={mrn} onChange={e => setMrn(e.target.value)} placeholder="MC-000123" required />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Registered mobile number</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone on file" />
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Registered mobile number')}</label>
+          <input value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Or date of birth</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Or date of birth')}</label>
           <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
           <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
-            Provide at least one of the two verification fields above.
+            {t('Provide at least one of the two verification fields above.')}
           </div>
         </div>
         {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
         <button type="submit" disabled={loading || !mrn.trim() || (!phone.trim() && !dateOfBirth)} style={{ width: '100%' }}>
-          {loading ? t('dash.loading') : 'Link my record'}
+          {loading ? t('dash.loading') : t('Link my record')}
         </button>
       </form>
     </div>

@@ -143,21 +143,21 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         bloodGlucose: '',
         notes: '',
       });
-      setMsg('Vitals saved successfully.');
+      setMsg(t('Vitals saved successfully.'));
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to save vitals.');
+      setMsg(err.message ?? t('Failed to save vitals.'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Vital Signs" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.vitals')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Checked in" value={appointments.length} icon="💓" color="#185FA5" />
-        <StatCard label="Encounter started" value={Object.keys(encounterMap).length} icon="📝" color="#0F6E56" />
-        <StatCard label="Awaiting start" value={Math.max(appointments.length - Object.keys(encounterMap).length, 0)} icon="⏳" color="#854F0B" />
-        <StatCard label="Selected history" value={selectedVitals.length} icon="📈" color="#991b1b" />
+        <StatCard label={t('checked_in')} value={appointments.length} icon="💓" color="#185FA5" />
+        <StatCard label={t('Encounter started')} value={Object.keys(encounterMap).length} icon="📝" color="#0F6E56" />
+        <StatCard label={t('Awaiting start')} value={Math.max(appointments.length - Object.keys(encounterMap).length, 0)} icon="⏳" color="#854F0B" />
+        <StatCard label={t('Selected history')} value={selectedVitals.length} icon="📈" color="#991b1b" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20, alignItems: 'start' }}>
@@ -166,7 +166,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search patient, MRN, doctor, or notes..."
+              placeholder={t('Search patient, MRN, doctor, or notes...')}
             />
           </div>
 
@@ -174,11 +174,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             keyField="id"
             loading={loading}
             rows={filteredAppointments}
-            empty="No patients are waiting for vitals."
+            empty={t('No patients are waiting for vitals.')}
             columns={[
               {
                 key: 'patient_name',
-                label: 'Patient',
+                label: t('dash.patient'),
                 render: (row) => (
                   <button
                     onClick={() => setSelectedAppointmentId(String(row.id))}
@@ -195,24 +195,24 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               },
               {
                 key: 'patient_mrn',
-                label: 'MRN',
+                label: t('dash.mrn'),
                 width: '130px',
                 render: (row) => <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.patient_mrn ?? '—')}</span>,
               },
-              { key: 'doctor_name', label: 'Doctor' },
+              { key: 'doctor_name', label: t('dash.doctor') },
               {
                 key: 'scheduled_start',
-                label: 'Time',
+                label: t('dash.time'),
                 width: '90px',
                 render: (row) => <span style={{ fontFamily: 'monospace' }}>{String(row.scheduled_start ?? '').slice(0, 5)}</span>,
               },
               {
                 key: 'encounter',
-                label: 'Encounter',
+                label: t('Encounter'),
                 width: '110px',
                 render: (row) => encounterMap[row.id]
-                  ? <Badge label="Started" preset="success" />
-                  : <Badge label="Not started" preset="gray" />,
+                  ? <Badge label={t('Started')} preset="success" />
+                  : <Badge label={t('Not started')} preset="gray" />,
               },
             ]}
           />
@@ -221,25 +221,25 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
           {!selectedAppointment ? (
             <div style={{ fontSize: 13, color: '#6b7280' }}>
-              Select a patient from the list to start or continue a vitals chart.
+              {t('Select a patient from the list to start or continue a vitals chart.')}
             </div>
           ) : (
             <>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{selectedAppointment.patient_name}</div>
                 <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                  MRN {selectedAppointment.patient_mrn} · {selectedAppointment.doctor_name} · {String(selectedAppointment.scheduled_start ?? '').slice(0, 5)}
+                  {t('dash.mrn')} {selectedAppointment.patient_mrn} · {selectedAppointment.doctor_name} · {String(selectedAppointment.scheduled_start ?? '').slice(0, 5)}
                 </div>
                 <div style={{ marginTop: 8 }}>
                   {selectedEncounter
-                    ? <Badge label="Encounter started" preset="success" />
-                    : <Badge label="Encounter will start on first save" preset="warning" />}
+                    ? <Badge label={t('Encounter started')} preset="success" />
+                    : <Badge label={t('Encounter will start on first save')} preset="warning" />}
                 </div>
               </div>
 
               {selectedVitals.length > 0 && (
                 <div style={{ marginBottom: 18, padding: '12px 14px', borderRadius: 8, background: '#f8fafc' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Recent vitals</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('Recent vitals')}</div>
                   {selectedVitals.slice(0, 3).map((vital, index) => (
                     <div key={index} style={{ fontSize: 12, color: '#4b5563', padding: '6px 0', borderTop: index > 0 ? '1px solid #e5e7eb' : 'none' }}>
                       {new Date(String(vital.recorded_at)).toLocaleString(locale)} — T:{vital.temperature_c ?? '—'} BP:{vital.bp_systolic ?? '—'}/{vital.bp_diastolic ?? '—'} HR:{vital.pulse_bpm ?? '—'} O2:{vital.o2_saturation ?? '—'}
@@ -251,15 +251,15 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               <form onSubmit={saveVitals}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                   {[
-                    ['temperatureC', 'Temperature (°C)'],
-                    ['bpSystolic', 'BP systolic'],
-                    ['bpDiastolic', 'BP diastolic'],
-                    ['pulseBpm', 'Pulse'],
-                    ['respiratoryRate', 'Respiratory rate'],
-                    ['o2Saturation', 'O2 saturation %'],
-                    ['weightKg', 'Weight (kg)'],
-                    ['heightCm', 'Height (cm)'],
-                    ['bloodGlucose', 'Blood glucose'],
+                    ['temperatureC', t('Temperature (°C)')],
+                    ['bpSystolic', t('BP systolic')],
+                    ['bpDiastolic', t('BP diastolic')],
+                    ['pulseBpm', t('emr.pulse')],
+                    ['respiratoryRate', t('Respiratory rate')],
+                    ['o2Saturation', t('O2 saturation %')],
+                    ['weightKg', t('Weight (kg)')],
+                    ['heightCm', t('Height (cm)')],
+                    ['bloodGlucose', t('Blood glucose')],
                   ].map(([key, label]) => (
                     <div key={key}>
                       <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{label}</label>
@@ -269,12 +269,12 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                 </div>
 
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>Notes</label>
-                  <textarea rows={3} value={form.notes} onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Optional nursing notes..." />
+                  <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{t('dash.notes')}</label>
+                  <textarea rows={3} value={form.notes} onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))} placeholder={t('Optional nursing notes...')} />
                 </div>
 
                 <button type="submit" disabled={saving}>
-                  {saving ? 'Saving…' : 'Save vitals'}
+                  {saving ? t('dash.loading') : t('Save vitals')}
                 </button>
               </form>
             </>

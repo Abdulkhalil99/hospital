@@ -46,8 +46,8 @@ export default function MyLabResults({ params: { locale } }: { params: { locale:
     <DashboardShell navItems={nav} title={t('nav.myresults')} locale={locale}>
       <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🧪</div>
-        <div>No lab results available yet.</div>
-        <div style={{ fontSize: 13, marginTop: 6 }}>Results appear here after your doctor releases them.</div>
+        <div>{t('No lab results available yet.')}</div>
+        <div style={{ fontSize: 13, marginTop: 6 }}>{t('Results appear here after your doctor releases them.')}</div>
       </div>
     </DashboardShell>
   );
@@ -76,11 +76,11 @@ export default function MyLabResults({ params: { locale } }: { params: { locale:
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{first.test_name}</div>
                   <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
                     {formatDate(first.entered_at, locale)} ·
-                    Barcode: <span style={{ fontFamily: 'monospace' }}>{first.barcode}</span> ·
-                    Dr. {first.ordered_by_name}
+                    {t('dash.barcode')}: <span style={{ fontFamily: 'monospace' }}>{first.barcode}</span> ·
+                    {t('dash.doctor')}: {first.ordered_by_name}
                   </div>
                 </div>
-                {hasCritical && <Badge label="⚠ Critical" preset="danger" />}
+                {hasCritical && <Badge label={`⚠ ${t('Critical')}`} preset="danger" />}
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 200 }}>
                   {rows.map((r: any, i: number) => (
                     r.flag && <Badge key={i} label={r.flag} preset={FLAG_PRESET[r.flag] ?? 'gray'} />
@@ -95,7 +95,7 @@ export default function MyLabResults({ params: { locale } }: { params: { locale:
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: '#f8f9fa' }}>
-                        {['Component','Result','Unit','Normal range','Flag'].map(h => (
+                        {[t('dash.component'), t('dash.result'), t('dash.unit'), t('Normal range'), t('dash.flag')].map(h => (
                           <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#555', borderBottom: '1px solid #eee' }}>{h}</th>
                         ))}
                       </tr>

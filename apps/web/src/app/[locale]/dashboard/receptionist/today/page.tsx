@@ -38,38 +38,38 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   async function checkin(appointmentId: string) {
     try {
       const res = await api.post<any>(`/appointments/${appointmentId}/checkin`, {});
-      setMsg(`Checked in ${res.token?.token_display ?? 'patient'} successfully.`);
+      setMsg(`✅ ${t('dash.checkin')} — ${res.token?.token_display ?? t('patient')}`);
       const refreshed = await api.get<any>(`/appointments?date=${today}&limit=100`);
       setAppointments(refreshed.data ?? []);
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to check in patient.');
+      setMsg(`❌ ${err.message ?? t('error')}`);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Today List" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.today')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Total today" value={appointments.length} icon="📋" color="#185FA5" />
-        <StatCard label="Scheduled" value={appointments.filter((a) => a.status === 'scheduled').length} icon="📅" color="#854F0B" />
-        <StatCard label="Checked in" value={appointments.filter((a) => a.status === 'checked_in').length} icon="✅" color="#0F6E56" />
-        <StatCard label="Completed" value={appointments.filter((a) => a.status === 'completed').length} icon="🏁" color="#6b7280" />
+        <StatCard label={t('Total today')} value={appointments.length} icon="📋" color="#185FA5" />
+        <StatCard label={t('scheduled')} value={appointments.filter((a) => a.status === 'scheduled').length} icon="📅" color="#854F0B" />
+        <StatCard label={t('checked_in')} value={appointments.filter((a) => a.status === 'checked_in').length} icon="✅" color="#0F6E56" />
+        <StatCard label={t('completed')} value={appointments.filter((a) => a.status === 'completed').length} icon="🏁" color="#6b7280" />
       </div>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search patient, MRN, or doctor..."
+          placeholder={t('Search patient, MRN, or doctor...')}
           style={{ flex: 1 }}
         />
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: 180 }}>
-          <option value="all">All statuses</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="checked_in">Checked in</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="no_show">No show</option>
+          <option value="all">{t('All status')}</option>
+          <option value="scheduled">{t('scheduled')}</option>
+          <option value="confirmed">{t('confirmed')}</option>
+          <option value="checked_in">{t('checked_in')}</option>
+          <option value="completed">{t('completed')}</option>
+          <option value="cancelled">{t('cancelled')}</option>
+          <option value="no_show">{t('No show')}</option>
         </select>
       </div>
 
@@ -90,35 +90,35 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         keyField="id"
         loading={loading}
         rows={filtered}
-        empty="No appointments found for today."
+        empty={t('dash.nodata')}
         columns={[
           {
             key: 'scheduled_start',
-            label: 'Time',
+            label: t('dash.time'),
             width: '90px',
             render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{String(row.scheduled_start ?? '').slice(0, 5)}</span>,
           },
           {
             key: 'patient_name',
-            label: 'Patient',
+            label: t('dash.patient'),
             render: (row) => <strong>{String(row.patient_name ?? '—')}</strong>,
           },
           {
             key: 'patient_mrn',
-            label: 'MRN',
+            label: t('dash.mrn'),
             width: '130px',
             render: (row) => <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.patient_mrn ?? '—')}</span>,
           },
-          { key: 'doctor_name', label: 'Doctor' },
+          { key: 'doctor_name', label: t('dash.doctor') },
           {
             key: 'scheduled_date',
-            label: 'Date',
+            label: t('dash.date'),
             width: '120px',
             render: (row) => formatDate(String(row.scheduled_date ?? today), locale),
           },
           {
             key: 'status',
-            label: 'Status',
+            label: t('dash.status'),
             width: '110px',
             render: (row) => {
               const current = String(row.status ?? 'unknown');
@@ -127,7 +127,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                 : current === 'checked_in' ? 'warning'
                 : current === 'cancelled' || current === 'no_show' ? 'danger'
                 : 'info';
-              return <Badge label={current} preset={preset as any} />;
+              return <Badge label={t(current)} preset={preset as any} />;
             },
           },
           {
@@ -136,7 +136,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             width: '110px',
             render: (row) => (
               row.status === 'scheduled' || row.status === 'confirmed'
-                ? <button onClick={() => checkin(String(row.id))} style={{ fontSize: 12, padding: '5px 12px' }}>Check in</button>
+                ? <button onClick={() => checkin(String(row.id))} style={{ fontSize: 12, padding: '5px 12px' }}>{t('dash.checkin')}</button>
                 : <span style={{ color: '#9ca3af', fontSize: 12 }}>—</span>
             ),
           },

@@ -5,17 +5,12 @@ import { StatCard }        from '@/components/layout/StatCard';
 import { DataTable }       from '@/components/layout/DataTable';
 import { Badge }           from '@/components/layout/Badge';
 import { api }             from '@/lib/api';
-
-const NAV = [
-  { label: 'Queue',         icon: '📋', path: '' },
-  { label: 'Vital signs',   icon: '💓', path: 'vitals' },
-  { label: 'Triage',        icon: '🚨', path: 'triage' },
-  { label: 'Patients',      icon: '👥', path: 'patients' },
-];
+import { useT }            from '@/lib/i18n';
+import { resolveNav, NURSE_NAV } from '@/lib/nav';
 
 export default function NurseDashboard({ params: { locale } }: { params: { locale: string } }) {
-  const base = `/${locale}/dashboard/nurse`;
-  const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
+  const t = useT(locale);
+  const nav = resolveNav(NURSE_NAV, locale, t);
   const today = new Date().toISOString().split('T')[0];
 
   const [appts,   setAppts]   = useState<any[]>([]);
@@ -28,25 +23,25 @@ export default function NurseDashboard({ params: { locale } }: { params: { local
   }, []);
 
   return (
-    <DashboardShell navItems={nav} title="Nurse Dashboard" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Nurse Dashboard')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
-        <StatCard label="Checked in"  value={appts.length} icon="✅" color="#0F6E56" />
-        <StatCard label="Today's date" value={today}       icon="📅" color="#185FA5" />
-        <StatCard label="Pending vitals" value={appts.filter((a:any) => a.status === 'checked_in').length} icon="💓" color="#854F0B" />
+        <StatCard label={t('checked_in')}  value={appts.length} icon="✅" color="#0F6E56" />
+        <StatCard label={t("Today's date")} value={today}       icon="📅" color="#185FA5" />
+        <StatCard label={t('Pending vitals')} value={appts.filter((a:any) => a.status === 'checked_in').length} icon="💓" color="#854F0B" />
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Patients awaiting vitals</div>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Patients awaiting vitals')}</div>
       <DataTable
-        keyField="id" loading={loading} rows={appts} empty="No patients waiting"
+        keyField="id" loading={loading} rows={appts} empty={t('No patients waiting')}
         columns={[
-          { key: 'patient_name', label: 'Patient', render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
-          { key: 'patient_mrn',  label: 'MRN', width: '130px',
+          { key: 'patient_name', label: t('dash.patient'), render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
+          { key: 'patient_mrn',  label: t('dash.mrn'), width: '130px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(r.patient_mrn ?? '—')}</span> },
-          { key: 'doctor_name',  label: 'Doctor' },
-          { key: 'scheduled_start', label: 'Time', width: '80px',
+          { key: 'doctor_name',  label: t('dash.doctor') },
+          { key: 'scheduled_start', label: t('dash.time'), width: '80px',
             render: r => <span style={{ fontFamily: 'monospace' }}>{String(r.scheduled_start ?? '').slice(0,5)}</span> },
-          { key: 'status', label: 'Status', width: '110px',
-            render: r => <Badge label={String(r.status)} preset="warning" /> },
+          { key: 'status', label: t('dash.status'), width: '110px',
+            render: r => <Badge label={t(String(r.status))} preset="warning" /> },
         ]}
       />
     </DashboardShell>

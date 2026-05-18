@@ -84,7 +84,7 @@ export default function DoctorDashboard({ params: { locale } }: { params: { loca
           { key: 'status', label: t('dash.status'), width: '100px',
             render: r => {
               const s = String(r.status);
-              return <Badge label={t(`dash.${s}`) || s} preset={s === 'called' ? 'success' : s === 'waiting' ? 'warning' : 'gray'} />;
+              return <Badge label={t(s)} preset={s === 'called' ? 'success' : s === 'waiting' ? 'warning' : 'gray'} />;
             }},
         ]}
       />

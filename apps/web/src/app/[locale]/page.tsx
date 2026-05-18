@@ -57,7 +57,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 42, marginBottom: 8 }}>🏥</div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#185FA5', marginBottom: 4 }}>MediCore HMS</h1>
-          <p style={{ fontSize: 13, color: '#888' }}>Hospital Management System</p>
+          <p style={{ fontSize: 13, color: '#888' }}>{t('Hospital Management System')}</p>
         </div>
 
         {/* Locale switcher */}

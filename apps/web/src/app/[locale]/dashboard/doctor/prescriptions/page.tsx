@@ -57,14 +57,14 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   }, [date]);
 
   async function cancelPrescription(encounterId: string, prescriptionId: string) {
-    if (!window.confirm('Cancel this pending prescription?')) return;
+    if (!window.confirm(t('Cancel this pending prescription?'))) return;
     setMsg('');
     try {
       await api.post(`/emr/${encounterId}/prescriptions/${prescriptionId}/cancel`, {});
-      setMsg('Prescription cancelled successfully.');
+      setMsg(t('Prescription cancelled successfully.'));
       await load(date);
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to cancel prescription.');
+      setMsg(err.message ?? t('Failed to cancel prescription.'));
     }
   }
 
@@ -83,28 +83,28 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   });
 
   return (
-    <DashboardShell navItems={nav} title="My Prescriptions" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.prescriptions')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Total today" value={prescriptions.length} icon="💊" color="#185FA5" />
-        <StatCard label="Pending" value={prescriptions.filter((row) => row.status === 'pending').length} icon="⏳" color="#854F0B" />
-        <StatCard label="Dispensed" value={prescriptions.filter((row) => row.status === 'dispensed' || row.status === 'partial').length} icon="✅" color="#0F6E56" />
-        <StatCard label="Controlled" value={prescriptions.filter((row) => row.is_controlled).length} icon="🛡️" color="#991b1b" />
+        <StatCard label={t('Total today')} value={prescriptions.length} icon="💊" color="#185FA5" />
+        <StatCard label={t('pending')} value={prescriptions.filter((row) => row.status === 'pending').length} icon="⏳" color="#854F0B" />
+        <StatCard label={t('dispensed')} value={prescriptions.filter((row) => row.status === 'dispensed' || row.status === 'partial').length} icon="✅" color="#0F6E56" />
+        <StatCard label={t('Controlled')} value={prescriptions.filter((row) => row.is_controlled).length} icon="🛡️" color="#991b1b" />
       </div>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search patient, MRN, drug, or instructions..."
+          placeholder={t('Search patient, MRN, drug, or instructions...')}
           style={{ flex: 1 }}
         />
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: 'auto' }} />
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: 160 }}>
-          <option value="all">All status</option>
-          <option value="pending">Pending</option>
-          <option value="dispensed">Dispensed</option>
-          <option value="partial">Partial</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="all">{t('All status')}</option>
+          <option value="pending">{t('pending')}</option>
+          <option value="dispensed">{t('dispensed')}</option>
+          <option value="partial">{t('partial')}</option>
+          <option value="cancelled">{t('cancelled')}</option>
         </select>
       </div>
 
@@ -125,11 +125,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         keyField="id"
         loading={loading}
         rows={filtered}
-        empty="No prescriptions found for the selected date."
+        empty={t('No prescriptions found for the selected date.')}
         columns={[
           {
             key: 'created_at',
-            label: 'Issued',
+            label: t('Issued'),
             width: '120px',
             render: (row) => (
               <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
@@ -142,7 +142,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'patient_name',
-            label: 'Patient',
+            label: t('dash.patient'),
             render: (row) => (
               <div>
                 <strong>{String(row.patient_name ?? '—')}</strong>
@@ -154,13 +154,13 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'patient_mrn',
-            label: 'MRN',
+            label: t('dash.mrn'),
             width: '130px',
             render: (row) => <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.patient_mrn ?? '—')}</span>,
           },
           {
             key: 'drug_name',
-            label: 'Medication',
+            label: t('Medication'),
             render: (row) => (
               <div>
                 <strong>{String(row.drug_name ?? '—')}</strong>
@@ -172,7 +172,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'frequency',
-            label: 'Sig',
+            label: t('Sig'),
             render: (row) => (
               <div style={{ fontSize: 12 }}>
                 <div>{String(row.dosage ?? '—')}</div>
@@ -182,15 +182,15 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'status',
-            label: 'Status',
+            label: t('dash.status'),
             width: '110px',
-            render: (row) => <Badge label={String(row.status ?? 'pending')} preset={prescriptionPreset(String(row.status ?? 'pending')) as any} />,
+            render: (row) => <Badge label={t(String(row.status ?? 'pending'))} preset={prescriptionPreset(String(row.status ?? 'pending')) as any} />,
           },
           {
             key: 'is_controlled',
-            label: 'Control',
+            label: t('Control'),
             width: '100px',
-            render: (row) => row.is_controlled ? <Badge label="Controlled" preset="danger" /> : <Badge label="Standard" preset="gray" />,
+            render: (row) => row.is_controlled ? <Badge label={t('Controlled')} preset="danger" /> : <Badge label={t('Standard')} preset="gray" />,
           },
           {
             key: 'action',
@@ -211,14 +211,14 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                     textDecoration: 'none',
                   }}
                 >
-                  Open EMR
+                  {t('Open EMR')}
                 </Link>
                 {row.status === 'pending' ? (
                   <button
                     onClick={() => cancelPrescription(String(row.encounter_id), String(row.id))}
                     style={{ fontSize: 12, padding: '5px 12px', background: '#fef2f2', color: '#991b1b' }}
                   >
-                    Cancel
+                    {t('dash.cancel')}
                   </button>
                 ) : (
                   <span style={{ color: '#9ca3af', fontSize: 12, alignSelf: 'center' }}>—</span>

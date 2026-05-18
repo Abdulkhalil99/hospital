@@ -79,35 +79,35 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   });
 
   return (
-    <DashboardShell navItems={nav} title="Lab Orders" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.lab')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Total orders" value={orders.length} icon="🧪" color="#185FA5" />
+        <StatCard label={t('Total orders')} value={orders.length} icon="🧪" color="#185FA5" />
         <StatCard label="STAT" value={orders.filter((order) => order.urgency === 'stat').length} icon="⚡" color="#991b1b" />
-        <StatCard label="Urgent" value={orders.filter((order) => order.urgency === 'urgent').length} icon="⏳" color="#854F0B" />
-        <StatCard label="Resulted" value={orders.filter((order) => order.status === 'resulted').length} icon="✅" color="#0F6E56" />
+        <StatCard label={t('Urgent')} value={orders.filter((order) => order.urgency === 'urgent').length} icon="⏳" color="#854F0B" />
+        <StatCard label={t('Resulted')} value={orders.filter((order) => order.status === 'resulted').length} icon="✅" color="#0F6E56" />
       </div>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search patient, MRN, test, or complaint..."
+          placeholder={t('Search patient, MRN, test, or complaint...')}
           style={{ flex: 1 }}
         />
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: 'auto' }} />
         <select value={urgency} onChange={(e) => setUrgency(e.target.value)} style={{ width: 130 }}>
-          <option value="all">All urgency</option>
-          <option value="routine">Routine</option>
-          <option value="urgent">Urgent</option>
+          <option value="all">{t('All urgency')}</option>
+          <option value="routine">{t('Routine')}</option>
+          <option value="urgent">{t('Urgent')}</option>
           <option value="stat">STAT</option>
         </select>
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: 170 }}>
-          <option value="all">All status</option>
-          <option value="ordered">Ordered</option>
-          <option value="sample_collected">Sample collected</option>
-          <option value="processing">Processing</option>
-          <option value="resulted">Resulted</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="all">{t('All status')}</option>
+          <option value="ordered">{t('Ordered')}</option>
+          <option value="sample_collected">{t('Sample collected')}</option>
+          <option value="processing">{t('Processing')}</option>
+          <option value="resulted">{t('Resulted')}</option>
+          <option value="cancelled">{t('cancelled')}</option>
         </select>
       </div>
 
@@ -115,11 +115,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         keyField="id"
         loading={loading}
         rows={filtered}
-        empty="No lab orders found for the selected date."
+        empty={t('No lab orders found for the selected date.')}
         columns={[
           {
             key: 'created_at',
-            label: 'Ordered',
+            label: t('Ordered'),
             width: '120px',
             render: (row) => (
               <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
@@ -132,7 +132,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'patient_name',
-            label: 'Patient',
+            label: t('dash.patient'),
             render: (row) => (
               <div>
                 <strong>{String(row.patient_name ?? '—')}</strong>
@@ -146,37 +146,37 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           },
           {
             key: 'patient_mrn',
-            label: 'MRN',
+            label: t('dash.mrn'),
             width: '130px',
             render: (row) => <span style={{ fontFamily: 'monospace', color: '#185FA5' }}>{String(row.patient_mrn ?? '—')}</span>,
           },
           {
             key: 'test_name',
-            label: 'Test',
+            label: t('Test'),
             render: (row) => (
               <div>
                 <strong>{String(row.test_name ?? '—')}</strong>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.test_code ?? 'No code')}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.test_code ?? t('No code'))}</div>
               </div>
             ),
           },
           {
             key: 'urgency',
-            label: 'Urgency',
+            label: t('dash.urgency'),
             width: '100px',
-            render: (row) => <Badge label={String(row.urgency ?? 'routine').toUpperCase()} preset={urgencyPreset(String(row.urgency ?? 'routine')) as any} />,
+            render: (row) => <Badge label={t(String(row.urgency ?? 'routine'))} preset={urgencyPreset(String(row.urgency ?? 'routine')) as any} />,
           },
           {
             key: 'status',
-            label: 'Status',
+            label: t('dash.status'),
             width: '140px',
-            render: (row) => <Badge label={String(row.status ?? 'ordered')} preset={statusPreset(String(row.status ?? 'ordered')) as any} />,
+            render: (row) => <Badge label={t(String(row.status ?? 'ordered'))} preset={statusPreset(String(row.status ?? 'ordered')) as any} />,
           },
           {
             key: 'encounter_status',
-            label: 'Encounter',
+            label: t('Encounter'),
             width: '120px',
-            render: (row) => <Badge label={String(row.encounter_status ?? 'open')} preset={row.encounter_status === 'completed' ? 'success' : 'info'} />,
+            render: (row) => <Badge label={t(String(row.encounter_status ?? 'open'))} preset={row.encounter_status === 'completed' ? 'success' : 'info'} />,
           },
           {
             key: 'action',
@@ -196,7 +196,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                   textDecoration: 'none',
                 }}
               >
-                Open EMR
+                {t('Open EMR')}
               </Link>
             ),
           },

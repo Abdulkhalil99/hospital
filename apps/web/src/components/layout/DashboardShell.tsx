@@ -113,7 +113,7 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
               <>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 1, textAlign: rtl ? 'right' : 'left' }}>{user.username}</div>
                 <div style={{ fontSize: 11, color: '#aaa', marginBottom: 8, textTransform: 'capitalize', textAlign: rtl ? 'right' : 'left' }}>
-                  {user.roles[0]?.replace('_', ' ')}
+                  {user.roles[0] ? t(user.roles[0]) : ''}
                 </div>
               </>
             )}
@@ -149,6 +149,8 @@ function formatDateHeader(locale: string): string {
   if (locale === 'en') {
     return now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
-  // Return Gregorian but with locale-aware day name
-  return now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  if (locale === 'fa') {
+    return now.toLocaleDateString('fa-AF-u-ca-persian', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  }
+  return now.toLocaleDateString('ps-AF-u-ca-persian', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }

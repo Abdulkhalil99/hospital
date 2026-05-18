@@ -72,38 +72,38 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         mechanism: mechanism.trim(),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
-      setMsg('Trauma activation sent successfully.');
+      setMsg(t('Trauma activation sent successfully.'));
       setVisitId('');
       setActivationLevel('level_2');
       setMechanism('');
       setNotes('');
       await loadData();
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to activate trauma.');
+      setMsg(err.message ?? t('Failed to activate trauma.'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Trauma Activation" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.trauma')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Activations" value={activations.length} icon="⚡" color="#185FA5" />
-        <StatCard label="Level 1" value={activations.filter((row) => row.activation_level === 'level_1').length} icon="🚨" color="#991b1b" />
-        <StatCard label="Level 2" value={activations.filter((row) => row.activation_level === 'level_2').length} icon="⏳" color="#854F0B" />
-        <StatCard label="Active ED visits" value={visits.length} icon="🏥" color="#0F6E56" />
+        <StatCard label={t('Activations')} value={activations.length} icon="⚡" color="#185FA5" />
+        <StatCard label={t('Level 1')} value={activations.filter((row) => row.activation_level === 'level_1').length} icon="🚨" color="#991b1b" />
+        <StatCard label={t('Level 2')} value={activations.filter((row) => row.activation_level === 'level_2').length} icon="⏳" color="#854F0B" />
+        <StatCard label={t('Active ED visits')} value={visits.length} icon="🏥" color="#0F6E56" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 20, alignItems: 'start', marginBottom: 24 }}>
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Activate trauma protocol</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Activate trauma protocol')}</div>
           <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6, marginBottom: 14 }}>
-            Use this when the ED needs immediate mobilization. The activation is broadcast across connected clinical dashboards.
+            {t('Use this when the ED needs immediate mobilization. The activation is broadcast across connected clinical dashboards.')}
           </div>
 
           <form onSubmit={activateTrauma} style={{ display: 'grid', gap: 10 }}>
             <select value={visitId} onChange={(e) => setVisitId(e.target.value)} required>
-              <option value="">Select active visit...</option>
+              <option value="">{t('Select active visit...')}</option>
               {visits.map((visit) => (
                 <option key={visit.id} value={visit.id}>
                   {visit.patient_name} · ESI {visit.triage_level ?? '—'} · {visit.chief_complaint}
@@ -112,15 +112,15 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             </select>
 
             <select value={activationLevel} onChange={(e) => setActivationLevel(e.target.value)}>
-              <option value="level_1">Level 1</option>
-              <option value="level_2">Level 2</option>
-              <option value="level_3">Level 3</option>
+              <option value="level_1">{t('Level 1')}</option>
+              <option value="level_2">{t('Level 2')}</option>
+              <option value="level_3">{t('Level 3')}</option>
             </select>
 
             <input
               value={mechanism}
               onChange={(e) => setMechanism(e.target.value)}
-              placeholder="Mechanism of injury or activation reason"
+              placeholder={t('Mechanism of injury or activation reason')}
               required
             />
 
@@ -128,11 +128,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes (optional)"
+              placeholder={t('Additional notes (optional)')}
             />
 
             <button type="submit" disabled={saving || visits.length === 0}>
-              {saving ? 'Activating…' : 'Activate trauma'}
+              {saving ? t('Activating…') : t('Activate trauma')}
             </button>
           </form>
 
@@ -155,14 +155,14 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search patient, mechanism, or responder..."
+              placeholder={t('Search patient, mechanism, or responder...')}
               style={{ flex: 1 }}
             />
             <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} style={{ width: 130 }}>
-              <option value="all">All levels</option>
-              <option value="level_1">Level 1</option>
-              <option value="level_2">Level 2</option>
-              <option value="level_3">Level 3</option>
+              <option value="all">{t('All levels')}</option>
+              <option value="level_1">{t('Level 1')}</option>
+              <option value="level_2">{t('Level 2')}</option>
+              <option value="level_3">{t('Level 3')}</option>
             </select>
           </div>
 
@@ -170,11 +170,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             keyField="id"
             loading={loading}
             rows={filtered}
-            empty="No trauma activations recorded."
+            empty={t('No trauma activations recorded.')}
             columns={[
               {
                 key: 'activated_at',
-                label: 'Activated',
+                label: t('Activated'),
                 width: '150px',
                 render: (row) => (
                   <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
@@ -184,13 +184,17 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               },
               {
                 key: 'activation_level',
-                label: 'Level',
+                label: t('Level'),
                 width: '100px',
-                render: (row) => <Badge label={String(row.activation_level ?? 'level_2').replace('_', ' ').toUpperCase()} preset={levelPreset(String(row.activation_level ?? 'level_2')) as any} />,
+                render: (row) => {
+                  const level = String(row.activation_level ?? 'level_2');
+                  const label = level === 'level_1' ? t('Level 1') : level === 'level_3' ? t('Level 3') : t('Level 2');
+                  return <Badge label={label} preset={levelPreset(level) as any} />;
+                },
               },
               {
                 key: 'patient_name',
-                label: 'Patient',
+                label: t('dash.patient'),
                 render: (row) => (
                   <div>
                     <strong>{String(row.patient_name ?? '—')}</strong>
@@ -198,8 +202,8 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                   </div>
                 ),
               },
-              { key: 'mechanism', label: 'Mechanism' },
-              { key: 'activated_by_name', label: 'Activated by' },
+              { key: 'mechanism', label: t('dash.mechanism') },
+              { key: 'activated_by_name', label: t('Activated by') },
             ]}
           />
         </div>

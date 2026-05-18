@@ -29,17 +29,17 @@ export default function MyAppointments({ params: { locale } }: { params: { local
   }, [upcoming]);
 
   async function cancelAppointment(appointmentId: string) {
-    const reason = window.prompt('Please enter a reason for cancellation:');
+    const reason = window.prompt(t('Please enter a reason for cancellation:'));
     if (!reason || !reason.trim()) return;
 
     setCancellingId(appointmentId);
     setMsg('');
     try {
       await api.post(`/portal/appointments/${appointmentId}/cancel`, { reason: reason.trim() });
-      setMsg('✅ Appointment cancelled successfully.');
+      setMsg(`✅ ${t('Appointment cancelled successfully.')}`);
       await loadAppointments(upcoming);
     } catch (err: any) {
-      setMsg(`❌ ${err.message ?? 'Failed to cancel appointment.'}`);
+      setMsg(`❌ ${err.message ?? t('Failed to cancel appointment.')}`);
     } finally {
       setCancellingId('');
     }
@@ -49,7 +49,7 @@ export default function MyAppointments({ params: { locale } }: { params: { local
     <DashboardShell navItems={nav} title={t('nav.myappointments')} locale={locale}>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {[[true, 'Upcoming'], [false, 'All']].map(([val, label]) => (
+        {[[true, t('Upcoming')], [false, t('All')]].map(([val, label]) => (
           <button key={String(val)} onClick={() => setUpcoming(val as boolean)}
             style={{ padding: '8px 20px', fontSize: 13, background: upcoming === val ? '#185FA5' : '#f0f0f0', color: upcoming === val ? '#fff' : '#555', border: 'none', borderRadius: 7, cursor: 'pointer' }}>
             {label}
@@ -71,7 +71,7 @@ export default function MyAppointments({ params: { locale } }: { params: { local
       )}
 
       <DataTable
-        keyField="id" loading={loading} rows={appts} empty="No appointments found"
+        keyField="id" loading={loading} rows={appts} empty={t('dash.nodata')}
         columns={[
           { key: 'scheduled_date', label: t('dash.date'), width: '130px',
             render: r => formatDate(String(r.scheduled_date), locale) },
@@ -85,7 +85,7 @@ export default function MyAppointments({ params: { locale } }: { params: { local
             render: r => {
               const s = String(r.status);
               const p = s === 'completed' ? 'success' : s === 'cancelled' ? 'danger' : s === 'checked_in' ? 'warning' : 'info';
-              return <Badge label={s} preset={p as any} />;
+              return <Badge label={t(s)} preset={p as any} />;
             }},
           { key: 'action', label: '', width: '130px',
             render: r => {
@@ -97,7 +97,7 @@ export default function MyAppointments({ params: { locale } }: { params: { local
                   disabled={cancellingId === r.id}
                   style={{ fontSize: 12, padding: '5px 12px', background: '#fef2f2', color: '#991b1b' }}
                 >
-                  {cancellingId === r.id ? 'Cancelling…' : 'Cancel'}
+                  {cancellingId === r.id ? t('Cancelling…') : t('dash.cancel')}
                 </button>
               );
             } },

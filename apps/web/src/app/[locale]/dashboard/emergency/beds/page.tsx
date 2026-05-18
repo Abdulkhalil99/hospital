@@ -79,25 +79,25 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         bedId,
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
-      setMsg('Bed assigned successfully.');
+      setMsg(t('Bed assigned successfully.'));
       setVisitId('');
       setBedId('');
       setNotes('');
       await loadData();
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to assign bed.');
+      setMsg(err.message ?? t('Failed to assign bed.'));
     } finally {
       setAssigning(false);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Bed Management" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Bed Management')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-        <StatCard label="Total beds" value={board.length} icon="🛏️" color="#185FA5" />
-        <StatCard label="Available" value={board.filter((row) => !row.visit_id).length} icon="✅" color="#0F6E56" />
-        <StatCard label="Occupied" value={board.filter((row) => !!row.visit_id).length} icon="🏥" color="#854F0B" />
-        <StatCard label="Critical waiting" value={visits.filter((visit) => [1, 2].includes(Number(visit.triage_level)) && !visit.bed_id).length} icon="🚨" color="#991b1b" />
+        <StatCard label={t('Total beds')} value={board.length} icon="🛏️" color="#185FA5" />
+        <StatCard label={t('available')} value={board.filter((row) => !row.visit_id).length} icon="✅" color="#0F6E56" />
+        <StatCard label={t('Occupied')} value={board.filter((row) => !!row.visit_id).length} icon="🏥" color="#854F0B" />
+        <StatCard label={t('Critical waiting')} value={visits.filter((visit) => [1, 2].includes(Number(visit.triage_level)) && !visit.bed_id).length} icon="🚨" color="#991b1b" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20, alignItems: 'start', marginBottom: 24 }}>
@@ -106,11 +106,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search bed, location, patient, or complaint..."
+              placeholder={t('Search bed, location, patient, or complaint...')}
               style={{ flex: 1 }}
             />
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ width: 150 }}>
-              <option value="all">All bed types</option>
+              <option value="all">{t('All bed types')}</option>
               {Array.from(new Set(board.map((row) => String(row.bed_type ?? '')).filter(Boolean))).map((type) => (
                 <option key={type} value={type}>{type}</option>
               ))}
@@ -121,7 +121,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             keyField="bed_id"
             loading={loading}
             rows={filteredBoard}
-            empty="No bed rows found."
+            empty={t('No bed rows found.')}
             columns={[
               {
                 key: 'bed_code',
@@ -134,31 +134,31 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                   </div>
                 ),
               },
-              { key: 'bed_type', label: 'Type', width: '120px' },
-              { key: 'location', label: 'Location' },
+              { key: 'bed_type', label: t('dash.type'), width: '120px' },
+              { key: 'location', label: t('dash.location') },
               {
                 key: 'occupancy',
-                label: 'Occupancy',
+                label: t('dash.status'),
                 width: '100px',
                 render: (row) => row.visit_id
-                  ? <Badge label="Occupied" preset="warning" />
-                  : <Badge label="Available" preset="success" />,
+                  ? <Badge label={t('Occupied')} preset="warning" />
+                  : <Badge label={t('available')} preset="success" />,
               },
               {
                 key: 'patient_name',
-                label: 'Patient',
+                label: t('dash.patient'),
                 render: (row) => row.patient_name
                   ? (
                     <div>
-                      <strong>{String(row.patient_name)}</strong>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.mrn ?? '—')}</div>
-                    </div>
+                    <strong>{String(row.patient_name)}</strong>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{String(row.mrn ?? '—')}</div>
+                  </div>
                   )
-                  : <span style={{ color: '#9ca3af' }}>Available</span>,
+                  : <span style={{ color: '#9ca3af' }}>{t('available')}</span>,
               },
               {
                 key: 'chief_complaint',
-                label: 'Clinical',
+                label: t('Clinical'),
                 render: (row) => (
                   row.visit_id
                     ? (
@@ -167,7 +167,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                         <div style={{ marginTop: 4 }}>
                           {row.triage_level
                             ? <Badge label={`ESI ${row.triage_level}`} preset={esiPreset(Number(row.triage_level)) as any} />
-                            : <Badge label="Untriaged" preset="gray" />}
+                            : <Badge label={t('Untriaged')} preset="gray" />}
                         </div>
                       </div>
                     )
@@ -176,7 +176,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               },
               {
                 key: 'minutes_in_ed',
-                label: 'Time in ED',
+                label: t('dash.timined'),
                 width: '100px',
                 render: (row) => {
                   if (!row.minutes_in_ed) return <span style={{ color: '#9ca3af' }}>—</span>;
@@ -189,14 +189,14 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         </div>
 
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Assign bed</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Assign bed')}</div>
           <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6, marginBottom: 14 }}>
-            Assign unbedded ED patients into any currently available bed. Critical ESI 1-2 patients should be prioritized first.
+            {t('Assign unbedded ED patients into any currently available bed. Critical ESI 1-2 patients should be prioritized first.')}
           </div>
 
           <form onSubmit={assignBed} style={{ display: 'grid', gap: 10 }}>
             <select value={visitId} onChange={(e) => setVisitId(e.target.value)} required>
-              <option value="">Select patient visit...</option>
+              <option value="">{t('Select patient visit...')}</option>
               {unassignedVisits.map((visit) => (
                 <option key={visit.id} value={visit.id}>
                   {visit.patient_name} · ESI {visit.triage_level ?? '—'} · {visit.chief_complaint}
@@ -205,7 +205,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             </select>
 
             <select value={bedId} onChange={(e) => setBedId(e.target.value)} required>
-              <option value="">Select available bed...</option>
+              <option value="">{t('Select available bed...')}</option>
               {availableOptions.map((bed) => (
                 <option key={bed.id} value={bed.id}>
                   {bed.bed_code} · {bed.bed_type} · {bed.occupancy}
@@ -217,11 +217,11 @@ export default function Page({ params: { locale } }: { params: { locale: string 
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Assignment notes (optional)"
+              placeholder={t('Assignment notes (optional)')}
             />
 
             <button type="submit" disabled={assigning || unassignedVisits.length === 0 || availableOptions.length === 0}>
-              {assigning ? 'Assigning…' : 'Assign bed'}
+              {assigning ? t('Assigning…') : t('Assign bed')}
             </button>
           </form>
 
