@@ -6,16 +6,16 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "test": "jest",
+    "test": "jest --config jest.config.cjs",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "db:migrate": "tsx src/infrastructure/database/migrate.ts",
     "db:seed": "tsx src/infrastructure/database/seed.ts",
-    "test:unit": "jest --testPathPattern=unit",
-    "test:integration": "jest --testPathPattern=integration",
-    "test:e2e": "jest --testPathPattern=e2e",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:unit": "jest --config jest.unit.config.cjs --testPathPattern=unit",
+    "test:integration": "jest --config jest.config.cjs --testPathPattern=integration",
+    "test:e2e": "jest --config jest.config.cjs --testPathPattern=e2e",
+    "test:coverage": "jest --config jest.config.cjs --coverage",
+    "test:watch": "jest --config jest.config.cjs --watch"
   },
   "dependencies": {
     "@medicore/shared-constants": "workspace:*",

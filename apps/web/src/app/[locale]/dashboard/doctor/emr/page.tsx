@@ -5,18 +5,12 @@ import { DashboardShell }       from '@/components/layout/DashboardShell';
 import { DataTable }            from '@/components/layout/DataTable';
 import { Badge }                from '@/components/layout/Badge';
 import { api }                  from '@/lib/api';
-
-const NAV = [
-  { label: 'My Queue',      icon: '📋', path: '/dashboard/doctor' },
-  { label: 'Appointments',  icon: '📅', path: '/dashboard/doctor/appointments' },
-  { label: 'Patients',      icon: '👥', path: '/dashboard/doctor/patients' },
-  { label: 'EMR',           icon: '📝', path: '/dashboard/doctor/emr' },
-  { label: 'Prescriptions', icon: '💊', path: '/dashboard/doctor/prescriptions' },
-  { label: 'Lab Orders',    icon: '🧪', path: '/dashboard/doctor/lab' },
-];
+import { useT }                 from '@/lib/i18n';
+import { resolveNav, DOCTOR_NAV } from '@/lib/nav';
 
 export default function DoctorEMR({ params: { locale } }: { params: { locale: string } }) {
-  const nav    = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
+  const t      = useT(locale);
+  const nav    = resolveNav(DOCTOR_NAV, locale, t);
   const router = useRouter();
 
   const [doctorId,   setDoctorId]   = useState('');
@@ -40,16 +34,16 @@ export default function DoctorEMR({ params: { locale } }: { params: { locale: st
   }
 
   return (
-    <DashboardShell navItems={nav} title="EMR — Today's Encounters" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.emr')} locale={locale}>
       <DataTable
         keyField="id" loading={loading} rows={encounters} empty="No encounters today"
         columns={[
-          { key: 'patient_name', label: 'Patient', render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
-          { key: 'patient_mrn',  label: 'MRN', width: '130px',
+          { key: 'patient_name', label: 'dash.patient', render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
+          { key: 'patient_mrn',  label: 'dash.mrn', width: '130px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#888' }}>{String(r.patient_mrn ?? '—')}</span> },
           { key: 'chief_complaint', label: 'Chief complaint',
             render: r => <span style={{ fontSize: 13 }}>{String(r.chief_complaint ?? '—')}</span> },
-          { key: 'status', label: 'Status', width: '110px',
+          { key: 'status', label: 'dash.status', width: '110px',
             render: r => {
               const s = String(r.status);
               return <Badge label={s} preset={s === 'completed' ? 'success' : s === 'in_progress' ? 'warning' : 'info'} />;
@@ -62,7 +56,7 @@ export default function DoctorEMR({ params: { locale } }: { params: { locale: st
                 onClick={() => router.push(`/${locale}/dashboard/doctor/emr/${r.id}`)}
                 style={{ fontSize: 12, padding: '4px 12px' }}
               >
-                Open
+                {t('Open')}
               </button>
             )},
         ]}

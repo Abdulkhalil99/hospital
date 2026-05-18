@@ -4,17 +4,11 @@ import { DashboardShell }      from '@/components/layout/DashboardShell';
 import { Badge }               from '@/components/layout/Badge';
 import { api }                 from '@/lib/api';
 import { useT }                from '@/lib/i18n';
-
-const NAV = [
-  { label: 'Invoices',     icon: '📄', path: '/dashboard/billing' },
-  { label: 'Payments',     icon: '💳', path: '/dashboard/billing/payments' },
-  { label: 'Outstanding',  icon: '⏳', path: '/dashboard/billing/outstanding' },
-  { label: 'Daily report', icon: '📊', path: '/dashboard/billing/report' },
-];
+import { resolveNav, BILLING_NAV } from '@/lib/nav';
 
 export default function PaymentsPage({ params: { locale } }: { params: { locale: string } }) {
-  const t = useT(locale);
-  const nav = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
+  const t   = useT(locale);
+  const nav = resolveNav(BILLING_NAV, locale, t);
 
   const [search,   setSearch]   = useState('');
   const [invoice,  setInvoice]  = useState<any>(null);
@@ -53,7 +47,7 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
   }
 
   return (
-    <DashboardShell navItems={nav} title="Record Payment" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.payments')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
         {/* Invoice list */}

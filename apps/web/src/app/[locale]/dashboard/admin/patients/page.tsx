@@ -195,7 +195,7 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
             render: r => String(r.blood_type ?? '—') },
           { key: 'has_allergies', label: t('dash.allergy'), width: '90px',
             render: r => r.has_allergies
-              ? <Badge label={`⚠ ${t('Yes')}`} preset="danger" />
+              ? <Badge label={`⚠ ${t('yes')}`} preset="danger" />
               : <Badge label={t('None')} preset="gray" /> },
         ]}
       />

@@ -82,7 +82,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   }
 
   return (
-    <DashboardShell navItems={nav} title="Inventory" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.inventory')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         <StatCard label="Inventory lines" value={inventory.length} icon="📦" color="#185FA5" />
         <StatCard label="Visible rows" value={filtered.length} icon="📋" color="#0F6E56" />
@@ -143,17 +143,17 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         rows={filtered}
         empty="No inventory records found."
         columns={[
-          { key: 'generic_name', label: 'Drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
+          { key: 'generic_name', label: 'dash.drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
           { key: 'strength', label: 'Strength', width: '110px' },
-          { key: 'location', label: 'Location', width: '140px' },
+          { key: 'location', label: 'dash.location', width: '140px' },
           { key: 'batch_number', label: 'Batch', width: '140px' },
           {
             key: 'quantity_on_hand',
-            label: 'On hand',
+            label: 'dash.stock',
             width: '100px',
             render: (row) => <strong style={{ color: Number(row.quantity_on_hand) <= Number(row.reorder_level) ? '#991b1b' : '#166534' }}>{String(row.quantity_on_hand ?? 0)}</strong>,
           },
-          { key: 'reorder_level', label: 'Reorder', width: '100px' },
+          { key: 'reorder_level', label: 'dash.reorder', width: '100px' },
           {
             key: 'expiry_date',
             label: 'Expiry',

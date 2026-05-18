@@ -1,8 +1,12 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
-
 process.env.JWT_SECRET = 'test_secret_minimum_32_characters_long_xx';
 
-import { signAccessToken, verifyAccessToken, signRefreshToken, verifyRefreshToken } from '@/shared/utils/jwt.util';
+import {
+  signAccessToken,
+  verifyAccessToken,
+  signRefreshToken,
+  hashRefreshToken,
+  refreshTokenExpiry,
+} from '@/shared/utils/jwt.util';
 import { UnauthorizedError } from '@/shared/errors/app-error';
 
 describe('JWT utilities', () => {
@@ -34,14 +38,14 @@ describe('JWT utilities', () => {
     expect(() => verifyAccessToken(tampered)).toThrow(UnauthorizedError);
   });
 
-  it('signs and verifies a refresh token', () => {
-    const token    = signRefreshToken('user-123');
-    const verified = verifyRefreshToken(token);
-    expect(verified.sub).toBe('user-123');
+  it('generates a refresh token pair and matching hash', () => {
+    const token = signRefreshToken();
+    expect(token.raw).toHaveLength(128);
+    expect(token.hash).toBe(hashRefreshToken(token.raw));
   });
 
-  it('throws for invalid refresh token', () => {
-    expect(() => verifyRefreshToken('bad.token')).toThrow(UnauthorizedError);
+  it('returns a refresh token expiry date in the future', () => {
+    expect(refreshTokenExpiry().getTime()).toBeGreaterThan(Date.now());
   });
 
 });

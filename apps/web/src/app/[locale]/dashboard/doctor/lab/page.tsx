@@ -99,7 +99,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
           <option value="all">{t('All urgency')}</option>
           <option value="routine">{t('Routine')}</option>
           <option value="urgent">{t('Urgent')}</option>
-          <option value="stat">STAT</option>
+          <option value="stat">{t('STAT')}</option>
         </select>
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: 170 }}>
           <option value="all">{t('All status')}</option>

@@ -42,7 +42,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   }
 
   return (
-    <DashboardShell navItems={nav} title="Critical Alerts" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.critical')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
         <StatCard label="Pending alerts" value={alerts.length} icon="🚨" color="#991b1b" />
         <StatCard label="Unique patients" value={new Set(alerts.map((row) => row.patient_mrn)).size} icon="👥" color="#185FA5" />
@@ -68,15 +68,15 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         rows={alerts}
         empty="No pending critical alerts."
         columns={[
-          { key: 'patient_name', label: 'Patient', render: (row) => <strong>{String(row.patient_name ?? '—')}</strong> },
-          { key: 'patient_mrn', label: 'MRN', width: '130px' },
-          { key: 'component_name', label: 'Component' },
-          { key: 'result_value', label: 'Result', width: '100px' },
-          { key: 'unit', label: 'Unit', width: '80px' },
+          { key: 'patient_name', label: 'dash.patient', render: (row) => <strong>{String(row.patient_name ?? '—')}</strong> },
+          { key: 'patient_mrn', label: 'dash.mrn', width: '130px' },
+          { key: 'component_name', label: 'dash.component' },
+          { key: 'result_value', label: 'dash.result', width: '100px' },
+          { key: 'unit', label: 'dash.unit', width: '80px' },
           { key: 'doctor_name', label: 'Ordering doctor' },
           {
             key: 'flag',
-            label: 'Flag',
+            label: 'dash.flag',
             width: '90px',
             render: (row) => <Badge label={String(row.flag ?? 'CRIT')} preset="danger" />,
           },
@@ -84,7 +84,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             key: 'action',
             label: '',
             width: '120px',
-            render: (row) => <button onClick={() => acknowledge(String(row.id))} style={{ fontSize: 12, padding: '5px 12px' }}>Acknowledge</button>,
+            render: (row) => <button onClick={() => acknowledge(String(row.id))} style={{ fontSize: 12, padding: '5px 12px' }}>{t('Acknowledge')}</button>,
           },
         ]}
       />

@@ -4,17 +4,11 @@ import { DashboardShell }      from '@/components/layout/DashboardShell';
 import { Badge }               from '@/components/layout/Badge';
 import { api }                 from '@/lib/api';
 import { useT }                from '@/lib/i18n';
-
-const NAV = [
-  { label: 'Worklist',        icon: '🧪', path: '/dashboard/lab' },
-  { label: 'Enter results',   icon: '✏️', path: '/dashboard/lab/results' },
-  { label: 'Critical alerts', icon: '🚨', path: '/dashboard/lab/critical' },
-  { label: 'Test catalog',    icon: '📋', path: '/dashboard/lab/catalog' },
-];
+import { resolveNav, LAB_NAV } from '@/lib/nav';
 
 export default function LabResults({ params: { locale } }: { params: { locale: string } }) {
-  const t = useT(locale);
-  const nav = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
+  const t   = useT(locale);
+  const nav = resolveNav(LAB_NAV, locale, t);
 
   const [barcode,  setBarcode]  = useState('');
   const [sample,   setSample]   = useState<any>(null);
@@ -47,7 +41,7 @@ export default function LabResults({ params: { locale } }: { params: { locale: s
   function removeRow(i: number) { setComponents(p => p.filter((_, idx) => idx !== i)); }
 
   return (
-    <DashboardShell navItems={nav} title="Enter Lab Results" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.results')} locale={locale}>
       <div style={{ maxWidth: 700 }}>
 
         {/* Step 1 — Scan */}

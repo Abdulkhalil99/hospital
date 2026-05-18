@@ -6,18 +6,11 @@ import { DataTable }       from '@/components/layout/DataTable';
 import { Badge }           from '@/components/layout/Badge';
 import { api }             from '@/lib/api';
 import { useT }            from '@/lib/i18n';
-
-const NAV = [
-  { label: 'Pending Rx',  icon: '💊', path: '' },
-  { label: 'Inventory',   icon: '📦', path: 'inventory' },
-  { label: 'Dispense',    icon: '✅', path: 'dispense' },
-  { label: 'Stock alerts',icon: '⚠️', path: 'alerts' },
-];
+import { resolveNav, PHARMACY_NAV } from '@/lib/nav';
 
 export default function PharmacyDashboard({ params: { locale } }: { params: { locale: string } }) {
-  const t = useT(locale);
-  const base = `/${locale}/dashboard/pharmacy`;
-  const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
+  const t   = useT(locale);
+  const nav = resolveNav(PHARMACY_NAV, locale, t);
 
   const [pending,   setPending]   = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
@@ -36,7 +29,7 @@ export default function PharmacyDashboard({ params: { locale } }: { params: { lo
   }, []);
 
   return (
-    <DashboardShell navItems={nav} title="Pharmacy Dashboard" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.pharmacy')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
         <StatCard label="Pending prescriptions" value={pending.length}   icon="💊" color="#185FA5" />
         <StatCard label="Stock alerts"          value={alerts.length}    icon="⚠️" color="#854F0B" />
@@ -58,12 +51,12 @@ export default function PharmacyDashboard({ params: { locale } }: { params: { lo
       <DataTable
         keyField="id" loading={loading} rows={pending} empty="No pending prescriptions"
         columns={[
-          { key: 'patient_name',      label: 'Patient' },
-          { key: 'patient_mrn',       label: 'MRN', width: '130px',
+          { key: 'patient_name',      label: 'dash.patient' },
+          { key: 'patient_mrn',       label: 'dash.mrn', width: '130px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(r.patient_mrn ?? '—')}</span> },
-          { key: 'drug_name',         label: 'Drug', render: r => <strong>{String(r.drug_name)}</strong> },
-          { key: 'dosage',            label: 'Dose', width: '100px' },
-          { key: 'frequency',         label: 'Frequency' },
+          { key: 'drug_name',         label: 'dash.drug', render: r => <strong>{String(r.drug_name)}</strong> },
+          { key: 'dosage',            label: 'dash.dose', width: '100px' },
+          { key: 'frequency',         label: 'dash.frequency' },
           { key: 'has_allergies',     label: 'Safety', width: '90px',
             render: r => r.has_allergies ? <Badge label="⚠ Allergy" preset="danger" /> : <Badge label="Safe" preset="success" /> },
         ]}

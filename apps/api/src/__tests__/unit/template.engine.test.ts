@@ -1,4 +1,3 @@
-import { describe, it, expect } from '@jest/globals';
 import { renderTemplate } from '@/modules/notifications/template.engine';
 
 describe('Template engine — renderTemplate', () => {

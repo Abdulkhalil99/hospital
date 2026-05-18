@@ -1,5 +1,3 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-
 // Mock the database
 jest.mock('@/infrastructure/database/db.client', () => ({
   getDb: jest.fn(() => ({

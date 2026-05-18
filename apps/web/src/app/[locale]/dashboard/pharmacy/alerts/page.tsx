@@ -35,7 +35,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   });
 
   return (
-    <DashboardShell navItems={nav} title="Stock Alerts" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.critical')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
         <StatCard label="Alert rows" value={alerts.length} icon="⚠️" color="#854F0B" />
         <StatCard label="Out of stock" value={alerts.filter((row) => row.alert_type === 'out_of_stock').length} icon="🚫" color="#991b1b" />
@@ -49,15 +49,15 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         rows={alerts}
         empty="No pharmacy alerts right now."
         columns={[
-          { key: 'generic_name', label: 'Drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
-          { key: 'location', label: 'Location', width: '130px' },
+          { key: 'generic_name', label: 'dash.drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
+          { key: 'location', label: 'dash.location', width: '130px' },
           {
             key: 'quantity_on_hand',
-            label: 'On hand',
+            label: 'dash.stock',
             width: '90px',
             render: (row) => <strong>{String(row.quantity_on_hand ?? 0)}</strong>,
           },
-          { key: 'reorder_level', label: 'Reorder', width: '90px' },
+          { key: 'reorder_level', label: 'dash.reorder', width: '90px' },
           {
             key: 'alert_type',
             label: 'Alert',
@@ -84,10 +84,10 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         rows={expiringSoon}
         empty="No batches expiring in the next 90 days."
         columns={[
-          { key: 'generic_name', label: 'Drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
-          { key: 'location', label: 'Location', width: '130px' },
+          { key: 'generic_name', label: 'dash.drug', render: (row) => <strong>{String(row.generic_name ?? '—')}</strong> },
+          { key: 'location', label: 'dash.location', width: '130px' },
           { key: 'batch_number', label: 'Batch', width: '140px' },
-          { key: 'quantity_on_hand', label: 'On hand', width: '90px' },
+          { key: 'quantity_on_hand', label: 'dash.stock', width: '90px' },
           {
             key: 'expiry_date',
             label: 'Expiry',

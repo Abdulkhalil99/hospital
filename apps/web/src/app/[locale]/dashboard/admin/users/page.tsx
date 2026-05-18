@@ -145,7 +145,7 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
       <DataTable
         keyField="id" loading={loading} rows={users} empty={t('No users found')}
         columns={[
-          { key: 'username', label: t('Username'), render: r => <strong>{String(r.username)}</strong> },
+          { key: 'username', label: t('auth.username'), render: r => <strong>{String(r.username)}</strong> },
           { key: 'full_name',label: t('Name') },
           { key: 'email',    label: t('Email'), render: r => <span style={{ fontSize: 12, color: '#888' }}>{String(r.email)}</span> },
           { key: 'roles',    label: t('Roles'),
@@ -156,8 +156,8 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
                 ))}
               </div>
             )},
-          { key: 'is_active', label: t('Status'), width: '100px',
-            render: r => <Badge label={r.is_active ? t('Active') : t('Inactive')} preset={r.is_active ? 'success' : 'danger'} /> },
+          { key: 'is_active', label: t('status'), width: '100px',
+            render: r => <Badge label={r.is_active ? t('active') : t('inactive')} preset={r.is_active ? 'success' : 'danger'} /> },
           { key: 'is_locked', label: t('Locked'), width: '80px',
             render: r => r.is_locked ? <Badge label={`🔒 ${t('Locked')}`} preset="warning" /> : null },
           { key: 'actions', label: '', width: '220px',

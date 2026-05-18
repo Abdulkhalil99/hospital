@@ -5,17 +5,11 @@ import { StatCard }            from '@/components/layout/StatCard';
 import { DataTable }           from '@/components/layout/DataTable';
 import { api }                 from '@/lib/api';
 import { useT }                from '@/lib/i18n';
-
-const NAV = [
-  { label: 'Invoices',     icon: '📄', path: '/dashboard/billing' },
-  { label: 'Payments',     icon: '💳', path: '/dashboard/billing/payments' },
-  { label: 'Outstanding',  icon: '⏳', path: '/dashboard/billing/outstanding' },
-  { label: 'Daily report', icon: '📊', path: '/dashboard/billing/report' },
-];
+import { resolveNav, BILLING_NAV } from '@/lib/nav';
 
 export default function DailyReport({ params: { locale } }: { params: { locale: string } }) {
-  const t = useT(locale);
-  const nav   = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
+  const t     = useT(locale);
+  const nav   = resolveNav(BILLING_NAV, locale, t);
   const today = new Date().toISOString().split('T')[0];
 
   const [date,     setDate]     = useState(today);
@@ -39,7 +33,7 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
   const totalTx      = revenue.reduce((s, r) => s + Number(r.transaction_count ?? 0), 0);
 
   return (
-    <DashboardShell navItems={nav} title="Daily Revenue Report" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.report')} locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ fontSize: 15, fontWeight: 600 }}>{t('Report for')}: {date}</div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: 'auto' }} />
@@ -47,7 +41,7 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
         <StatCard label="Total revenue"     value={`AFN ${totalRevenue.toLocaleString()}`} icon="💰" color="#0F6E56" />
-        <StatCard label="Transactions"      value={totalTx} icon="🧾" color="#185FA5" />
+        <StatCard label="dash.transactions" value={totalTx} icon="🧾" color="#185FA5" />
         <StatCard label="Cashiers active"   value={cashier.length} icon="👤" color="#854F0B" />
       </div>
 
@@ -56,10 +50,10 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
         <DataTable
           keyField="payment_method" loading={loading} rows={revenue} empty="No transactions today"
           columns={[
-            { key: 'payment_method', label: 'Method',
+            { key: 'payment_method', label: 'dash.method',
               render: r => <strong style={{ textTransform: 'capitalize' }}>{String(r.payment_method).replace('_',' ')}</strong> },
-            { key: 'transaction_count', label: 'Transactions', width: '130px' },
-            { key: 'total_amount', label: 'Total', width: '160px',
+            { key: 'transaction_count', label: 'dash.transactions', width: '130px' },
+            { key: 'total_amount', label: 'dash.total', width: '160px',
               render: r => <strong style={{ color: '#0F6E56' }}>AFN {Number(r.total_amount).toLocaleString()}</strong> },
           ]}
         />
@@ -70,13 +64,13 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
         <DataTable
           keyField="cashier_name" loading={loading} rows={cashier} empty="No cashier activity"
           columns={[
-            { key: 'cashier_name',      label: 'Cashier', render: r => <strong>{String(r.cashier_name)}</strong> },
-            { key: 'transaction_count', label: 'Transactions', width: '130px' },
-            { key: 'cash_total',        label: 'Cash', width: '130px',
+            { key: 'cashier_name',      label: 'dash.cashier', render: r => <strong>{String(r.cashier_name)}</strong> },
+            { key: 'transaction_count', label: 'dash.transactions', width: '130px' },
+            { key: 'cash_total',        label: 'cash', width: '130px',
               render: r => `AFN ${Number(r.cash_total ?? 0).toLocaleString()}` },
-            { key: 'card_total',        label: 'Card', width: '130px',
+            { key: 'card_total',        label: 'card', width: '130px',
               render: r => `AFN ${Number(r.card_total ?? 0).toLocaleString()}` },
-            { key: 'total_collected',   label: 'Total', width: '140px',
+            { key: 'total_collected',   label: 'dash.total', width: '140px',
               render: r => <strong style={{ color: '#0F6E56' }}>AFN {Number(r.total_collected).toLocaleString()}</strong> },
           ]}
         />

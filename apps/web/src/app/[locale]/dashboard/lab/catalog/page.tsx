@@ -31,7 +31,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   });
 
   return (
-    <DashboardShell navItems={nav} title="Test Catalog" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.catalog')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
         <StatCard label="Active tests" value={tests.length} icon="🧪" color="#185FA5" />
         <StatCard label="Categories" value={new Set(tests.map((row) => row.category)).size} icon="📋" color="#0F6E56" />

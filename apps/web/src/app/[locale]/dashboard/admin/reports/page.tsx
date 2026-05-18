@@ -160,7 +160,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={d => d.slice(5)} />
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#0F6E56" radius={[4,4,0,0]} name={t('Patients')} />
+                  <Bar dataKey="count" fill="#0F6E56" radius={[4,4,0,0]} name={t('nav.patients')} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -172,7 +172,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <Pie data={apptStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={renderAppointmentStatusLabel} labelLine={false} fontSize={11}>
                     {apptStatus.map((s,i) => <Cell key={i} fill={STATUS_COLOR[s.status] ?? COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [String(value ?? '—'), t(String(name ?? 'Status'))]} />
+                  <Tooltip formatter={(value, name) => [String(value ?? '—'), t(String(name ?? 'status'))]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -199,11 +199,11 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(value, name) => [
                   name === 'revenue' ? `AFN ${Number(value ?? 0).toLocaleString()}` : String(value ?? 0),
-                  name === 'revenue' ? t('Revenue') : t('Transactions'),
+                  name === 'revenue' ? t('Revenue') : t('dash.transactions'),
                 ]} />
                 <Legend />
                 <Area yAxisId="left"  type="monotone" dataKey="revenue"      stroke="#185FA5" fill="url(#r2)" strokeWidth={2} name={t('Revenue')} />
-                <Area yAxisId="right" type="monotone" dataKey="transactions" stroke="#0F6E56" fill="none"      strokeWidth={2} name={t('Transactions')} />
+                <Area yAxisId="right" type="monotone" dataKey="transactions" stroke="#0F6E56" fill="none"      strokeWidth={2} name={t('dash.transactions')} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -235,7 +235,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 { key: 'specialty',    label: t('dash.specialty') },
                 { key: 'appointments', label: t('nav.appointments'), width: '130px',
                   render: r => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#185FA5' }}>{String(r.appointments)}</span> },
-                { key: 'completed',    label: t('Completed'), width: '110px',
+                { key: 'completed',    label: t('dash.completed'), width: '110px',
                   render: r => <span style={{ color: '#0F6E56' }}>{String(r.completed)}</span> },
                 { key: 'revenue',      label: t('Revenue'), width: '140px',
                   render: r => `AFN ${Number(r.revenue).toLocaleString()}` },

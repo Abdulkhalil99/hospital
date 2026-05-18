@@ -6,18 +6,11 @@ import { DataTable }       from '@/components/layout/DataTable';
 import { Badge }           from '@/components/layout/Badge';
 import { api }             from '@/lib/api';
 import { useT }            from '@/lib/i18n';
-
-const NAV = [
-  { label: 'Worklist',       icon: '🧪', path: '' },
-  { label: 'Enter results',  icon: '✏️', path: 'results' },
-  { label: 'Critical alerts',icon: '🚨', path: 'critical' },
-  { label: 'Test catalog',   icon: '📋', path: 'catalog' },
-];
+import { resolveNav, LAB_NAV } from '@/lib/nav';
 
 export default function LabDashboard({ params: { locale } }: { params: { locale: string } }) {
-  const t = useT(locale);
-  const base = `/${locale}/dashboard/lab`;
-  const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
+  const t   = useT(locale);
+  const nav = resolveNav(LAB_NAV, locale, t);
 
   const [worklist, setWorklist] = useState<any[]>([]);
   const [critical, setCritical] = useState<any[]>([]);
@@ -37,7 +30,7 @@ export default function LabDashboard({ params: { locale } }: { params: { locale:
   const stat = (u: string) => worklist.filter((w: any) => w.urgency === u).length;
 
   return (
-    <DashboardShell navItems={nav} title="Laboratory Dashboard" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.lab')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
         <StatCard label="Total pending" value={worklist.length}   icon="🧪" color="#185FA5" />
         <StatCard label="STAT orders"   value={stat('stat')}      icon="⚡" color="#991b1b" />
@@ -60,17 +53,17 @@ export default function LabDashboard({ params: { locale } }: { params: { locale:
       <DataTable
         keyField="id" loading={loading} rows={worklist} empty="Worklist is empty"
         columns={[
-          { key: 'urgency', label: 'Priority', width: '90px',
+          { key: 'urgency', label: 'dash.priority', width: '90px',
             render: r => {
               const u = String(r.urgency);
               return <Badge label={u.toUpperCase()} preset={u === 'stat' ? 'danger' : u === 'urgent' ? 'warning' : 'info'} />;
             }},
-          { key: 'barcode',      label: 'Barcode', width: '160px',
+          { key: 'barcode',      label: 'dash.barcode', width: '160px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#185FA5' }}>{String(r.barcode ?? '—')}</span> },
-          { key: 'patient_name', label: 'Patient' },
+          { key: 'patient_name', label: 'dash.patient' },
           { key: 'test_name',    label: 'Test', render: r => <strong>{String(r.test_name)}</strong> },
-          { key: 'sample_type',  label: 'Sample', width: '90px' },
-          { key: 'sample_status',label: 'Status', width: '110px',
+          { key: 'sample_type',  label: 'dash.sample', width: '90px' },
+          { key: 'sample_status',label: 'dash.status', width: '110px',
             render: r => <Badge label={String(r.sample_status ?? r.status ?? '—')} preset="info" /> },
         ]}
       />

@@ -86,7 +86,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
   }
 
   return (
-    <DashboardShell navItems={nav} title="Dispense" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.dispense')} locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20, alignItems: 'start' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Pending prescriptions')}</div>
@@ -98,7 +98,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             columns={[
               {
                 key: 'patient_name',
-                label: 'Patient',
+                label: 'dash.patient',
                 render: (row) => (
                   <button
                     onClick={() => {
@@ -117,10 +117,10 @@ export default function Page({ params: { locale } }: { params: { locale: string 
                   </button>
                 ),
               },
-              { key: 'patient_mrn', label: 'MRN', width: '130px' },
-              { key: 'drug_name', label: 'Drug', render: (row) => <strong>{String(row.drug_name ?? '—')}</strong> },
-              { key: 'dosage', label: 'Dose', width: '100px' },
-              { key: 'quantity', label: 'Qty', width: '70px' },
+              { key: 'patient_mrn', label: 'dash.mrn', width: '130px' },
+              { key: 'drug_name', label: 'dash.drug', render: (row) => <strong>{String(row.drug_name ?? '—')}</strong> },
+              { key: 'dosage', label: 'dash.dose', width: '100px' },
+              { key: 'quantity', label: 'dash.quantity', width: '70px' },
               {
                 key: 'has_allergies',
                 label: 'Safety',
@@ -139,7 +139,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             <>
               <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 14 }}>
                 <strong>{selectedPrescription.patient_name}</strong> ({selectedPrescription.patient_mrn})<br />
-                {t('Drug')}: <strong>{selectedPrescription.drug_name}</strong><br />
+                {t('dash.drug')}: <strong>{selectedPrescription.drug_name}</strong><br />
                 {t('dash.dose')}: {selectedPrescription.dosage} · {selectedPrescription.frequency}
               </div>
 

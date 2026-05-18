@@ -293,7 +293,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
                 <div style={fieldStyle}><label style={labelStyle}>{t('Test code')}</label><input value={lab.testCode} onChange={e => setLab(p => ({...p, testCode: e.target.value}))} placeholder={t('e.g. CBC')} /></div>
                 <div style={fieldStyle}><label style={labelStyle}>{t('dash.urgency')}</label>
                   <select value={lab.urgency} onChange={e => setLab(p => ({...p, urgency: e.target.value}))}>
-                    <option value="routine">{t('Routine')}</option><option value="urgent">{t('Urgent')}</option><option value="stat">STAT</option>
+                    <option value="routine">{t('Routine')}</option><option value="urgent">{t('Urgent')}</option><option value="stat">{t('STAT')}</option>
                   </select>
                 </div>
               </div>
