@@ -37,7 +37,7 @@ export default function AuditPage({ params: { locale } }: { params: { locale: st
   };
 
   return (
-    <DashboardShell navItems={nav} title="Audit Logs" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Audit Logs')} locale={locale}>
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: 6 }}>
         {[['audit','Audit logs'],['security','Security events']].map(([id,label]) => (
@@ -59,17 +59,17 @@ export default function AuditPage({ params: { locale } }: { params: { locale: st
           </div>
 
           <DataTable
-            keyField="id" loading={loading} rows={logs} empty="No audit logs"
+            keyField="id" loading={loading} rows={logs} empty={t('No audit logs')}
             columns={[
-              { key: 'created_at', label: 'Time', width: '160px',
+              { key: 'created_at', label: t('dash.time'), width: '160px',
                 render: r => <span style={{ fontSize: 11, fontFamily: 'monospace' }}>{new Date(String(r.created_at)).toLocaleString()}</span> },
-              { key: 'username',   label: 'User', width: '130px',
+              { key: 'username',   label: t('User'), width: '130px',
                 render: r => <strong>{String(r.username ?? '—')}</strong> },
-              { key: 'action',     label: 'Action', width: '80px',
+              { key: 'action',     label: t('Action'), width: '80px',
                 render: r => <Badge label={String(r.action)} preset={ACTION_COLORS[String(r.action)] ?? 'gray'} /> },
-              { key: 'table_name', label: 'Table',
+              { key: 'table_name', label: t('Table'),
                 render: r => <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#185FA5' }}>{String(r.table_name)}</span> },
-              { key: 'record_id',  label: 'Record ID', width: '200px',
+              { key: 'record_id',  label: t('Record ID'), width: '200px',
                 render: r => <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#888' }}>{String(r.record_id ?? '—').slice(0,18)}…</span> },
             ]}
           />
@@ -78,17 +78,17 @@ export default function AuditPage({ params: { locale } }: { params: { locale: st
 
       {tab === 'security' && (
         <DataTable
-          keyField="id" loading={loading} rows={security} empty="No security events"
+          keyField="id" loading={loading} rows={security} empty={t('No security events')}
           columns={[
-            { key: 'created_at', label: 'Time', width: '160px',
+            { key: 'created_at', label: t('dash.time'), width: '160px',
               render: r => <span style={{ fontSize: 11, fontFamily: 'monospace' }}>{new Date(String(r.created_at)).toLocaleString()}</span> },
-            { key: 'username',   label: 'User', width: '130px',
+            { key: 'username',   label: t('User'), width: '130px',
               render: r => <strong>{String(r.username ?? '—')}</strong> },
-            { key: 'event_type', label: 'Event',
+            { key: 'event_type', label: t('Event'),
               render: r => <Badge label={String(r.event_type ?? '—')} preset={String(r.event_type).includes('fail') || String(r.event_type).includes('lock') ? 'danger' : 'info'} /> },
-            { key: 'ip_address', label: 'IP', width: '130px',
+            { key: 'ip_address', label: t('IP'), width: '130px',
               render: r => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(r.ip_address ?? '—')}</span> },
-            { key: 'details',    label: 'Details',
+            { key: 'details',    label: t('Details'),
               render: r => <span style={{ fontSize: 12, color: '#888' }}>{JSON.stringify(r.details ?? {}).slice(0,60)}</span> },
           ]}
         />

@@ -1,6 +1,7 @@
 'use client';
 import { useLocale }  from '@/hooks/useLocale';
 import type { Locale } from '@/i18n/request';
+import { useT } from '@/lib/i18n';
 
 const LANGUAGES: { code: Locale; label: string; native: string }[] = [
   { code: 'en', label: 'English', native: 'English' },
@@ -10,6 +11,7 @@ const LANGUAGES: { code: Locale; label: string; native: string }[] = [
 
 export function LanguageSwitcher() {
   const { locale, switchLocale } = useLocale();
+  const t = useT(locale);
 
   return (
     <div className="flex items-center gap-1">
@@ -25,10 +27,10 @@ export function LanguageSwitcher() {
           ].join(' ')}
           lang={lang.code}
           dir={['fa','ps'].includes(lang.code) ? 'rtl' : 'ltr'}
-          aria-label={`Switch to ${lang.label}`}
+          aria-label={t('Switch to {{language}}', { language: t(lang.label) })}
           aria-pressed={locale === lang.code}
         >
-          {lang.native}
+          {t(lang.label) === lang.native ? lang.native : `${t(lang.label)} — ${lang.native}`}
         </button>
       ))}
     </div>

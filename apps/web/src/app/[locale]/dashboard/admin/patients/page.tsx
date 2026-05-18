@@ -11,6 +11,11 @@ import { resolveNav, ADMIN_NAV } from '@/lib/nav';
 export default function AdminPatients({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
   const nav = resolveNav(ADMIN_NAV, locale, t);
+  const languageOptions = [
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+    { value: 'en', label: t('English'), native: 'English' },
+  ];
 
   const [patients, setPatients] = useState<any[]>([]);
   const [total,    setTotal]    = useState(0);
@@ -41,7 +46,7 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
         setTotal(0);
       }
     } catch (err: any) {
-      setMsg(`❌ ${err.message}`);
+      setMsg(`❌ ${t(err.message)}`);
     } finally {
       setLoading(false);
     }
@@ -65,7 +70,7 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
       // Reload list after short delay
       setTimeout(load, 500);
     } catch (err: any) {
-      setMsg(`❌ ${err.message}`);
+      setMsg(`❌ ${t(err.message)}`);
     } finally {
       setSaving(false);
     }
@@ -74,13 +79,13 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 } as const;
 
   return (
-    <DashboardShell navItems={nav} title="Patients" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.patients')} locale={locale}>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 20 }}>
-        <StatCard label="Total patients" value={total} icon="👥" color="#185FA5" />
-        <StatCard label="Loaded"         value={patients.length} icon="📋" color="#0F6E56" />
-        <StatCard label="Search results" value={q ? patients.length : total} icon="🔍" color="#854F0B" />
+        <StatCard label={t('Total patients')} value={total} icon="👥" color="#185FA5" />
+        <StatCard label={t('Loaded')}         value={patients.length} icon="📋" color="#0F6E56" />
+        <StatCard label={t('Search results')} value={q ? patients.length : total} icon="🔍" color="#854F0B" />
       </div>
 
       {/* Controls */}
@@ -119,11 +124,11 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
               <div>
                 <label style={labelStyle}>{t('First name')} *</label>
-                <input value={form.firstName} onChange={e => setForm(p => ({...p, firstName: e.target.value}))} required placeholder="Ahmad" />
+                <input value={form.firstName} onChange={e => setForm(p => ({...p, firstName: e.target.value}))} required placeholder={t('Ahmad')} />
               </div>
               <div>
                 <label style={labelStyle}>{t('Last name')} *</label>
-                <input value={form.lastName} onChange={e => setForm(p => ({...p, lastName: e.target.value}))} required placeholder="Karimi" />
+                <input value={form.lastName} onChange={e => setForm(p => ({...p, lastName: e.target.value}))} required placeholder={t('Karimi')} />
               </div>
               <div>
                 <label style={labelStyle}>{t('dash.dob')} *</label>
@@ -150,9 +155,11 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
               <div>
                 <label style={labelStyle}>{t('Preferred language')}</label>
                 <select value={form.preferredLanguage} onChange={e => setForm(p => ({...p, preferredLanguage: e.target.value}))}>
-                  <option value="fa">فارسی</option>
-                  <option value="ps">پښتو</option>
-                  <option value="en">English</option>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -173,23 +180,23 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
         keyField="id"
         loading={loading}
         rows={patients}
-        empty={q ? t('No patients found matching "{{query}}"', { query: q }) : 'No patients registered yet. Click "+ Register patient" to add one.'}
+        empty={q ? t('No patients found matching "{{query}}"', { query: q }) : t('No patients registered yet. Click "+ Register patient" to add one.')}
         columns={[
-          { key: 'mrn', label: 'MRN', width: '150px',
+          { key: 'mrn', label: t('dash.mrn'), width: '150px',
             render: r => <span style={{ fontFamily: 'monospace', color: '#185FA5', fontWeight: 600 }}>{String(r.mrn ?? '—')}</span> },
-          { key: 'name', label: 'Full name',
+          { key: 'name', label: t('Full name'),
             render: r => <strong>{`${r.first_name ?? ''} ${r.last_name ?? ''}`}</strong> },
-          { key: 'date_of_birth', label: 'Date of birth', width: '130px',
+          { key: 'date_of_birth', label: t('dash.dob'), width: '130px',
             render: r => r.date_of_birth ? formatDate(String(r.date_of_birth), locale) : '—' },
-          { key: 'gender', label: 'Gender', width: '90px',
-            render: r => <Badge label={String(r.gender ?? '—')} preset="info" /> },
-          { key: 'phone', label: 'Phone', width: '130px' },
-          { key: 'blood_type', label: 'Blood', width: '80px',
+          { key: 'gender', label: t('dash.gender'), width: '90px',
+            render: r => <Badge label={t(String(r.gender ?? 'Unknown'))} preset="info" /> },
+          { key: 'phone', label: t('dash.phone'), width: '130px' },
+          { key: 'blood_type', label: t('dash.blood'), width: '80px',
             render: r => String(r.blood_type ?? '—') },
-          { key: 'has_allergies', label: 'Allergy', width: '90px',
+          { key: 'has_allergies', label: t('dash.allergy'), width: '90px',
             render: r => r.has_allergies
-              ? <Badge label="⚠ Yes" preset="danger" />
-              : <Badge label="None" preset="gray" /> },
+              ? <Badge label={`⚠ ${t('Yes')}`} preset="danger" />
+              : <Badge label={t('None')} preset="gray" /> },
         ]}
       />
     </DashboardShell>

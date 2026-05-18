@@ -27,28 +27,28 @@ export default function AdminBilling({ params: { locale } }: { params: { locale:
   };
 
   return (
-    <DashboardShell navItems={nav} title="Billing" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.billing')} locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>Invoices</div>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{t('Invoices')}</div>
         <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: 'auto' }}>
-          <option value="">All statuses</option>
-          {['draft','issued','partial','paid','cancelled','void'].map(s => <option key={s} value={s}>{s}</option>)}
+          <option value="">{t('All statuses')}</option>
+          {['draft','issued','partial','paid','cancelled','void'].map(s => <option key={s} value={s}>{t(s)}</option>)}
         </select>
       </div>
       <DataTable
-        keyField="id" loading={loading} rows={invoices} empty="No invoices found"
+        keyField="id" loading={loading} rows={invoices} empty={t('No invoices found')}
         columns={[
-          { key: 'invoice_number', label: 'Invoice #', width: '160px',
+          { key: 'invoice_number', label: t('Invoice #'), width: '160px',
             render: r => <span style={{ fontFamily: 'monospace', color: '#185FA5', fontWeight: 600 }}>{String(r.invoice_number)}</span> },
-          { key: 'patient_name', label: 'Patient', render: r => <strong>{String(r.patient_name)}</strong> },
-          { key: 'total_amount', label: 'Total', width: '130px',
+          { key: 'patient_name', label: t('dash.patient'), render: r => <strong>{String(r.patient_name)}</strong> },
+          { key: 'total_amount', label: t('dash.total'), width: '130px',
             render: r => `AFN ${Number(r.total_amount).toLocaleString()}` },
-          { key: 'paid_amount', label: 'Paid', width: '130px',
+          { key: 'paid_amount', label: t('dash.paid'), width: '130px',
             render: r => <span style={{ color: '#166534' }}>AFN {Number(r.paid_amount).toLocaleString()}</span> },
-          { key: 'balance_due', label: 'Balance', width: '130px',
+          { key: 'balance_due', label: t('dash.balance'), width: '130px',
             render: r => <strong style={{ color: Number(r.balance_due) > 0 ? '#991b1b' : '#166534' }}>AFN {Number(r.balance_due).toLocaleString()}</strong> },
-          { key: 'status', label: 'Status', width: '90px',
-            render: r => <Badge label={String(r.status)} preset={STATUS_PRESET[String(r.status)] ?? 'gray'} /> },
+          { key: 'status', label: t('dash.status'), width: '90px',
+            render: r => <Badge label={t(String(r.status))} preset={STATUS_PRESET[String(r.status)] ?? 'gray'} /> },
         ]}
       />
     </DashboardShell>

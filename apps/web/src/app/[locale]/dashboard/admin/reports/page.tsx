@@ -84,7 +84,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
   ] as const;
 
   return (
-    <DashboardShell navItems={nav} title="Reports & Analytics" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Reports & Analytics')} locale={locale}>
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: 6 }}>
@@ -121,12 +121,12 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
           {/* KPI cards */}
           {kpi && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
-              <StatCard label="Total patients"      value={kpi.patients.total}                              icon="👥" color="#185FA5" sub={`+${kpi.patients.newToday} ${t('dash.today')}`} />
-              <StatCard label="Available doctors"   value={`${kpi.doctors.available}/${kpi.doctors.total}`} icon="👨‍⚕️" color="#0F6E56" />
-              <StatCard label="Appts today"         value={kpi.appointments.today}                          icon="📅" color="#3C3489" sub={`${kpi.appointments.completed} ${t('completed')}`} />
-              <StatCard label="Revenue today"       value={`AFN ${Number(kpi.revenue.today).toLocaleString()}`} icon="💰" color="#0F6E56" sub={`${t('Month')}: ${Number(kpi.revenue.month).toLocaleString()}`} />
-              <StatCard label="Active ED visits"    value={kpi.emergency.active}                            icon="🚨" color="#991b1b" sub={`${kpi.emergency.level1Today} ESI-1 ${t('dash.today')}`} />
-              <StatCard label="Pending lab orders"  value={kpi.lab.pending}                                 icon="🧪" color="#854F0B" sub={`${kpi.lab.criticalAlerts} critical`} />
+              <StatCard label={t('Total patients')}      value={kpi.patients.total}                              icon="👥" color="#185FA5" sub={`+${kpi.patients.newToday} ${t('dash.today')}`} />
+              <StatCard label={t('Available doctors')}   value={`${kpi.doctors.available}/${kpi.doctors.total}`} icon="👨‍⚕️" color="#0F6E56" />
+              <StatCard label={t('Appts today')}         value={kpi.appointments.today}                          icon="📅" color="#3C3489" sub={`${kpi.appointments.completed} ${t('completed')}`} />
+              <StatCard label={t('Revenue today')}       value={`AFN ${Number(kpi.revenue.today).toLocaleString()}`} icon="💰" color="#0F6E56" sub={`${t('Month')}: ${Number(kpi.revenue.month).toLocaleString()}`} />
+              <StatCard label={t('Active ED visits')}    value={kpi.emergency.active}                            icon="🚨" color="#991b1b" sub={`${kpi.emergency.level1Today} ESI-1 ${t('dash.today')}`} />
+              <StatCard label={t('Pending lab orders')}  value={kpi.lab.pending}                                 icon="🧪" color="#854F0B" sub={`${kpi.lab.criticalAlerts} ${t('critical')}`} />
             </div>
           )}
 
@@ -144,7 +144,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => (v/1000).toFixed(0)+'k'} />
-                <Tooltip formatter={(value) => formatCurrencyTooltip(value, 'Revenue')} labelFormatter={l => `Date: ${l}`} />
+                <Tooltip formatter={(value) => formatCurrencyTooltip(value, t('Revenue'))} labelFormatter={l => `${t('dash.date')}: ${l}`} />
                 <Area type="monotone" dataKey="revenue" stroke="#185FA5" strokeWidth={2} fill="url(#revGrad)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -160,7 +160,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={d => d.slice(5)} />
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#0F6E56" radius={[4,4,0,0]} name="Patients" />
+                  <Bar dataKey="count" fill="#0F6E56" radius={[4,4,0,0]} name={t('Patients')} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -172,7 +172,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <Pie data={apptStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={renderAppointmentStatusLabel} labelLine={false} fontSize={11}>
                     {apptStatus.map((s,i) => <Cell key={i} fill={STATUS_COLOR[s.status] ?? COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [String(value ?? '—'), String(name ?? 'Status')]} />
+                  <Tooltip formatter={(value, name) => [String(value ?? '—'), t(String(name ?? 'Status'))]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -199,11 +199,11 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(value, name) => [
                   name === 'revenue' ? `AFN ${Number(value ?? 0).toLocaleString()}` : String(value ?? 0),
-                  name === 'revenue' ? 'Revenue' : 'Transactions',
+                  name === 'revenue' ? t('Revenue') : t('Transactions'),
                 ]} />
                 <Legend />
-                <Area yAxisId="left"  type="monotone" dataKey="revenue"      stroke="#185FA5" fill="url(#r2)" strokeWidth={2} name="revenue" />
-                <Area yAxisId="right" type="monotone" dataKey="transactions" stroke="#0F6E56" fill="none"      strokeWidth={2} name="transactions" />
+                <Area yAxisId="left"  type="monotone" dataKey="revenue"      stroke="#185FA5" fill="url(#r2)" strokeWidth={2} name={t('Revenue')} />
+                <Area yAxisId="right" type="monotone" dataKey="transactions" stroke="#0F6E56" fill="none"      strokeWidth={2} name={t('Transactions')} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -215,8 +215,8 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => 'AFN '+(v/1000).toFixed(0)+'k'} />
                 <YAxis type="category" dataKey="age_bucket" tick={{ fontSize: 11 }} width={90} />
-                <Tooltip formatter={(value) => formatCurrencyTooltip(value, 'Balance')} />
-                <Bar dataKey="total_balance" fill="#991b1b" radius={[0,4,4,0]} name="Balance" />
+                <Tooltip formatter={(value) => formatCurrencyTooltip(value, t('dash.balance'))} />
+                <Bar dataKey="total_balance" fill="#991b1b" radius={[0,4,4,0]} name={t('dash.balance')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -229,15 +229,15 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
           <div style={card}>
             <div style={chartTitle}>{t('Top doctors by appointments (30d)')}</div>
             <DataTable
-              keyField="full_name" loading={loading} rows={topDocs} empty="No data"
+              keyField="full_name" loading={loading} rows={topDocs} empty={t('No data')}
               columns={[
-                { key: 'full_name',    label: 'Doctor', render: r => <strong>{String(r.full_name)}</strong> },
-                { key: 'specialty',    label: 'Specialty' },
-                { key: 'appointments', label: 'Appointments', width: '130px',
+                { key: 'full_name',    label: t('dash.doctor'), render: r => <strong>{String(r.full_name)}</strong> },
+                { key: 'specialty',    label: t('dash.specialty') },
+                { key: 'appointments', label: t('nav.appointments'), width: '130px',
                   render: r => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#185FA5' }}>{String(r.appointments)}</span> },
-                { key: 'completed',    label: 'Completed', width: '110px',
+                { key: 'completed',    label: t('Completed'), width: '110px',
                   render: r => <span style={{ color: '#0F6E56' }}>{String(r.completed)}</span> },
-                { key: 'revenue',      label: 'Revenue', width: '140px',
+                { key: 'revenue',      label: t('Revenue'), width: '140px',
                   render: r => `AFN ${Number(r.revenue).toLocaleString()}` },
               ]}
             />
@@ -275,7 +275,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <XAxis dataKey="level" tickFormatter={l => `ESI ${l}`} tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip labelFormatter={l => `ESI ${l}`} />
-                  <Bar dataKey="count" radius={[4,4,0,0]} name="Visits">
+                  <Bar dataKey="count" radius={[4,4,0,0]} name={t('Visits')}>
                     {emergency.map((_,i) => (
                       <Cell key={i} fill={['#991b1b','#ea580c','#ca8a04','#16a34a','#2563eb'][i] ?? '#888'} />
                     ))}
@@ -291,8 +291,8 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="level" tickFormatter={l => `ESI ${l}`} tick={{ fontSize: 11 }} width={60} />
-                  <Tooltip labelFormatter={l => `ESI ${l}`} formatter={(value) => formatMinutesTooltip(value, 'Avg time')} />
-                  <Bar dataKey="avgMinutes" fill="#185FA5" radius={[0,4,4,0]} name="Avg minutes" />
+                  <Tooltip labelFormatter={l => `ESI ${l}`} formatter={(value) => formatMinutesTooltip(value, t('Avg time'))} />
+                  <Bar dataKey="avgMinutes" fill="#185FA5" radius={[0,4,4,0]} name={t('Avg minutes')} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

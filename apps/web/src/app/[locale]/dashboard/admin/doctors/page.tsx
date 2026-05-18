@@ -47,6 +47,11 @@ const INITIAL_FORM = {
 export default function AdminDoctors({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
   const nav = resolveNav(ADMIN_NAV, locale, t);
+  const languageOptions = [
+    { value: 'en', label: t('English'), native: 'English' },
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+  ];
 
   const [doctors,  setDoctors]  = useState<any[]>([]);
   const [specialties, setSpecialties] = useState<any[]>([]);
@@ -157,14 +162,14 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
       const prefix = doctorCreated
         ? `⚠ ${t('Doctor account was created, but the schedule setup did not finish.')}`
         : '❌';
-      setMsg(`${prefix} ${err.message ?? t('Unable to create doctor.')}`);
+      setMsg(`${prefix} ${err.message ? t(err.message) : t('Unable to create doctor.')}`);
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <DashboardShell navItems={nav} title="Doctors" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.doctors')} locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 600, color: '#1f2937' }}>{doctors.length} {t('doctors registered')}</div>
@@ -238,9 +243,11 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Preferred language')}</label>
                 <select value={form.preferredLanguage} onChange={e => setField('preferredLanguage', e.target.value)}>
-                  <option value="en">English</option>
-                  <option value="fa">فارسی</option>
-                  <option value="ps">پښتو</option>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -397,20 +404,20 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
       )}
 
       <DataTable
-        keyField="id" loading={loading} rows={doctors} empty="No doctors found"
+        keyField="id" loading={loading} rows={doctors} empty={t('No doctors found')}
         columns={[
-          { key: 'full_name', label: 'Name',
+          { key: 'full_name', label: t('Name'),
             render: r => <strong>{`${r.title} ${r.full_name}`}</strong> },
-          { key: 'email', label: 'Email',
+          { key: 'email', label: t('Email'),
             render: r => <span style={{ fontSize: 12, color: '#6b7280' }}>{String(r.email ?? '—')}</span> },
-          { key: 'license_number', label: 'License', width: '150px',
+          { key: 'license_number', label: t('License'), width: '150px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{String(r.license_number)}</span> },
-          { key: 'specialty_name', label: 'Specialty' },
-          { key: 'department_name', label: 'Department' },
-          { key: 'consultation_fee', label: 'Fee', width: '100px',
+          { key: 'specialty_name', label: t('dash.specialty') },
+          { key: 'department_name', label: t('Department') },
+          { key: 'consultation_fee', label: t('dash.fee'), width: '100px',
             render: r => `AFN ${Number(r.consultation_fee).toLocaleString()}` },
-          { key: 'is_available', label: 'Status', width: '100px',
-            render: r => <Badge label={r.is_available ? 'Available' : 'Unavailable'} preset={r.is_available ? 'success' : 'danger'} /> },
+          { key: 'is_available', label: t('dash.status'), width: '100px',
+            render: r => <Badge label={r.is_available ? t('dash.available') : t('dash.unavailable')} preset={r.is_available ? 'success' : 'danger'} /> },
         ]}
       />
     </DashboardShell>

@@ -17,6 +17,11 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
   const [otpTarget, setOtpTarget] = useState('');
   const [mrn,      setMrn]      = useState('');
   const [otpCode,  setOtpCode]  = useState('');
+  const languageOptions = [
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+    { value: 'en', label: t('English'), native: 'English' },
+  ];
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', dateOfBirth: '',
@@ -47,7 +52,7 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
         onSuccess?.(result.patient.mrn);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('Registration failed'));
+      setError(err instanceof Error ? t(err.message) : t('Registration failed'));
     } finally { setLoading(false); }
   }
 
@@ -59,7 +64,7 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
       setStep('done');
       onSuccess?.(mrn);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('Invalid code'));
+      setError(err instanceof Error ? t(err.message) : t('Invalid code'));
     } finally { setLoading(false); }
   }
 
@@ -70,7 +75,7 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
       await patientsService.resendOtp(patientId, otpTarget, type);
       setError(t('New code sent.'));
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('Failed to resend'));
+      setError(err instanceof Error ? t(err.message) : t('Failed to resend'));
     } finally { setLoading(false); }
   }
 
@@ -177,9 +182,11 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
           {t('Preferred language')}
         </label>
         <select value={form.preferredLanguage} onChange={e => set('preferredLanguage', e.target.value)} style={{ width: '100%' }}>
-          <option value="fa">Persian — فارسی</option>
-          <option value="ps">Pashto — پښتو</option>
-          <option value="en">English</option>
+          {languageOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
+            </option>
+          ))}
         </select>
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12,
@@ -195,6 +202,3 @@ export function PatientRegistrationForm({ onSuccess }: { onSuccess?: (mrn: strin
     </form>
   );
 }
-
-
-// this file has error to solve later 

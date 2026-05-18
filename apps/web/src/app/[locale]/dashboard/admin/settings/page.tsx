@@ -8,6 +8,11 @@ import { resolveNav, ADMIN_NAV } from '@/lib/nav';
 export default function SettingsPage({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
   const nav = resolveNav(ADMIN_NAV, locale, t);
+  const languageOptions = [
+    { value: 'en', label: t('English'), native: 'English' },
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+  ];
 
   const [settings, setSettings] = useState<any>({});
   const [flags,    setFlags]    = useState<any[]>([]);
@@ -31,7 +36,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
     try {
       await api.patch('/admin/settings', settings);
       setMsg(`✅ ${t('Settings saved')}`);
-    } catch (err: any) { setMsg(`❌ ${err.message}`); }
+    } catch (err: any) { setMsg(`❌ ${t(err.message)}`); }
     setSaving(false);
   }
 
@@ -50,13 +55,13 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
   );
 
   if (loading) return (
-    <DashboardShell navItems={nav} title="Settings" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Settings')} locale={locale}>
       <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>{t('dash.loading')}</div>
     </DashboardShell>
   );
 
   return (
-    <DashboardShell navItems={nav} title="Hospital Settings" locale={locale}>
+    <DashboardShell navItems={nav} title={t('Hospital Settings')} locale={locale}>
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: 6 }}>
@@ -88,6 +93,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {field('Address (EN)', 'address')}
               {field('Address (FA)', 'address_fa')}
+              {field('Address (PS)', 'address_ps')}
             </div>
           </div>
 
@@ -97,9 +103,11 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Default language')}</label>
                 <select value={settings.default_language ?? 'fa'} onChange={e => set('default_language', e.target.value)}>
-                  <option value="en">English</option>
-                  <option value="fa">فارسی</option>
-                  <option value="ps">پښتو</option>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
+                    </option>
+                  ))}
                 </select>
               </div>
               {field('Currency', 'default_currency')}
@@ -128,7 +136,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
           {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
 
           <button type="submit" disabled={saving} style={{ padding: '10px 28px' }}>
-            {saving ? t('Saving…') : t('Save settings')}
+            {saving ? t('Saving...') : t('Save settings')}
           </button>
         </form>
       )}

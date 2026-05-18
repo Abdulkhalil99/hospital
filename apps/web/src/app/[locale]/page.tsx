@@ -9,6 +9,11 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const router   = useRouter();
   const t        = useT(locale);
   const rtl      = isRTL(locale);
+  const languageOptions = [
+    { value: 'en', label: t('English'), native: 'English' },
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+  ];
 
   const [username, setUsername] = useState('superadmin');
   const [password, setPassword] = useState('Admin@123456');
@@ -45,7 +50,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
       saveSession({ accessToken: res.accessToken, refreshToken: res.refreshToken, user });
       router.replace(getDashboardPath(user.roles, locale));
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
+      setError(err instanceof Error ? t(err.message) : t('auth.invalidCredentials'));
       setLoading(false);
     }
   }
@@ -62,15 +67,15 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
         {/* Locale switcher */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, justifyContent: 'center' }}>
-          {[['en','English'],['fa','فارسی'],['ps','پښتو']].map(([loc, label]) => (
-            <a key={loc} href={`/${loc}`} style={{
+          {languageOptions.map((option) => (
+            <a key={option.value} href={`/${option.value}`} style={{
               padding: '4px 14px', borderRadius: 6, fontSize: 13, border: '1px solid',
-              borderColor: locale === loc ? '#185FA5' : '#ddd',
-              background:  locale === loc ? '#185FA5' : '#fff',
-              color:       locale === loc ? '#fff'    : '#555',
+              borderColor: locale === option.value ? '#185FA5' : '#ddd',
+              background:  locale === option.value ? '#185FA5' : '#fff',
+              color:       locale === option.value ? '#fff'    : '#555',
               textDecoration: 'none',
             }}>
-              {label}
+              {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
             </a>
           ))}
         </div>
@@ -101,7 +106,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         </form>
 
         <div style={{ marginTop: 20, padding: '12px 14px', background: '#f0f7ff', borderRadius: 8, fontSize: 12, color: '#555', lineHeight: 1.7, textAlign: rtl ? 'right' : 'left' }}>
-          superadmin / Admin@123456
+          {t('Demo login')}: superadmin / Admin@123456
         </div>
       </div>
     </div>

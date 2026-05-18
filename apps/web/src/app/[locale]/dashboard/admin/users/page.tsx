@@ -10,6 +10,11 @@ import { resolveNav, ADMIN_NAV } from '@/lib/nav';
 export default function UsersPage({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
   const nav = resolveNav(ADMIN_NAV, locale, t);
+  const languageOptions = [
+    { value: 'en', label: t('English'), native: 'English' },
+    { value: 'fa', label: t('Persian'), native: 'فارسی' },
+    { value: 'ps', label: t('Pashto'), native: 'پښتو' },
+  ];
 
   const [users,   setUsers]   = useState<any[]>([]);
   const [roles,   setRoles]   = useState<any[]>([]);
@@ -54,7 +59,7 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
   }
 
   async function deleteUser(userId: string, username: string) {
-    if (!confirm(`Delete user ${username}? This cannot be undone.`)) return;
+    if (!confirm(t('Delete user {{username}}? This cannot be undone.', { username }))) return;
     await api.delete(`/admin/users/${userId}`);
     loadUsers();
   }
@@ -81,11 +86,11 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
       setShowCreate(false);
       setNewUser({ username: '', email: '', password: '', fullName: '', preferredLanguage: 'en', roleIds: [] });
       loadUsers();
-    } catch (err: any) { setMsg(`❌ ${err.message}`); }
+    } catch (err: any) { setMsg(`❌ ${t(err.message)}`); }
   }
 
   return (
-    <DashboardShell navItems={nav} title="User Management" locale={locale}>
+    <DashboardShell navItems={nav} title={t('User Management')} locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ flex: 1, maxWidth: 400 }}>
           <input value={q} onChange={e => setQ(e.target.value)} placeholder={t('Search username, email, name…')} />
@@ -117,9 +122,11 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Language')}</label>
                 <select value={newUser.preferredLanguage} onChange={e => setNewUser(p => ({...p, preferredLanguage: e.target.value}))}>
-                  <option value="en">English</option>
-                  <option value="fa">فارسی</option>
-                  <option value="ps">پښتو</option>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label === option.native ? option.native : `${option.label} — ${option.native}`}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -136,12 +143,12 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
 
       {/* Users table */}
       <DataTable
-        keyField="id" loading={loading} rows={users} empty="No users found"
+        keyField="id" loading={loading} rows={users} empty={t('No users found')}
         columns={[
-          { key: 'username', label: 'Username', render: r => <strong>{String(r.username)}</strong> },
-          { key: 'full_name',label: 'Name' },
-          { key: 'email',    label: 'Email', render: r => <span style={{ fontSize: 12, color: '#888' }}>{String(r.email)}</span> },
-          { key: 'roles',    label: 'Roles',
+          { key: 'username', label: t('Username'), render: r => <strong>{String(r.username)}</strong> },
+          { key: 'full_name',label: t('Name') },
+          { key: 'email',    label: t('Email'), render: r => <span style={{ fontSize: 12, color: '#888' }}>{String(r.email)}</span> },
+          { key: 'roles',    label: t('Roles'),
             render: r => (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {((r.roles as string[]) ?? []).map((role, i) => (
@@ -149,10 +156,10 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
                 ))}
               </div>
             )},
-          { key: 'is_active', label: 'Status', width: '100px',
-            render: r => <Badge label={r.is_active ? 'Active' : 'Inactive'} preset={r.is_active ? 'success' : 'danger'} /> },
-          { key: 'is_locked', label: 'Locked', width: '80px',
-            render: r => r.is_locked ? <Badge label="🔒 Locked" preset="warning" /> : null },
+          { key: 'is_active', label: t('Status'), width: '100px',
+            render: r => <Badge label={r.is_active ? t('Active') : t('Inactive')} preset={r.is_active ? 'success' : 'danger'} /> },
+          { key: 'is_locked', label: t('Locked'), width: '80px',
+            render: r => r.is_locked ? <Badge label={`🔒 ${t('Locked')}`} preset="warning" /> : null },
           { key: 'actions', label: '', width: '220px',
             render: r => (
               <div style={{ display: 'flex', gap: 4 }}>

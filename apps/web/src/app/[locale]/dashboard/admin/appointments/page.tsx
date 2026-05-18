@@ -28,23 +28,23 @@ export default function AdminAppointments({ params: { locale } }: { params: { lo
   };
 
   return (
-    <DashboardShell navItems={nav} title="Appointments" locale={locale}>
+    <DashboardShell navItems={nav} title={t('nav.appointments')} locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>Appointments for {date}</div>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{t('Appointments for {{date}}', { date })}</div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: 'auto' }} />
       </div>
       <DataTable
-        keyField="id" loading={loading} rows={appts} empty="No appointments for this date"
+        keyField="id" loading={loading} rows={appts} empty={t('No appointments for this date')}
         columns={[
-          { key: 'scheduled_start', label: 'Time', width: '80px',
+          { key: 'scheduled_start', label: t('dash.time'), width: '80px',
             render: r => <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{String(r.scheduled_start ?? '').slice(0,5)}</span> },
-          { key: 'patient_name', label: 'Patient', render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
-          { key: 'patient_mrn', label: 'MRN', width: '140px',
+          { key: 'patient_name', label: t('dash.patient'), render: r => <strong>{String(r.patient_name ?? '—')}</strong> },
+          { key: 'patient_mrn', label: t('dash.mrn'), width: '140px',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#888' }}>{String(r.patient_mrn ?? '—')}</span> },
-          { key: 'doctor_name', label: 'Doctor' },
-          { key: 'type_name', label: 'Type' },
-          { key: 'status', label: 'Status', width: '110px',
-            render: r => <Badge label={String(r.status)} preset={STATUS_PRESET[String(r.status)] ?? 'gray'} /> },
+          { key: 'doctor_name', label: t('dash.doctor') },
+          { key: 'type_name', label: t('dash.type') },
+          { key: 'status', label: t('dash.status'), width: '110px',
+            render: r => <Badge label={t(String(r.status))} preset={STATUS_PRESET[String(r.status)] ?? 'gray'} /> },
         ]}
       />
     </DashboardShell>
