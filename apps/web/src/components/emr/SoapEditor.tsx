@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 interface SoapData {
   subjective: string;
@@ -47,7 +49,10 @@ const SECTIONS = [
   },
 ] as const;
 
-export function SoapEditor({ encounterId, isLocked, initial, onSave }: SoapEditorProps) {
+export function SoapEditor({ isLocked, initial, onSave }: SoapEditorProps) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
   const [data, setData] = useState<SoapData>({
     subjective: initial?.subjective ?? '',
     objective:  initial?.objective  ?? '',
@@ -70,7 +75,7 @@ export function SoapEditor({ encounterId, isLocked, initial, onSave }: SoapEdito
       await onSave(data);
       setSaved(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Save failed');
+      setError(err instanceof Error ? err.message : t('Save failed'));
     } finally { setSaving(false); }
   }
 
@@ -82,7 +87,7 @@ export function SoapEditor({ encounterId, isLocked, initial, onSave }: SoapEdito
           background: '#FCEBEB', border: '.5px solid #F09595',
           fontSize: 12, color: '#791F1F',
         }}>
-          This record is locked. Only addendums can be added.
+          {t('This record is locked. Only addendums can be added.')}
         </div>
       )}
 
@@ -101,14 +106,14 @@ export function SoapEditor({ encounterId, isLocked, initial, onSave }: SoapEdito
                 {s.letter}
               </span>
               <span style={{ fontSize: 12, fontWeight: 500, color: s.textColor }}>
-                {s.label}
+                {t(`emr.${s.key}`)}
               </span>
             </div>
             <textarea
               value={data[s.key]}
               onChange={e => set(s.key, e.target.value)}
               disabled={isLocked}
-              placeholder={s.placeholder}
+              placeholder={t(s.placeholder)}
               rows={6}
               style={{
                 width: '100%', border: 'none', padding: '10px 12px',
@@ -125,10 +130,10 @@ export function SoapEditor({ encounterId, isLocked, initial, onSave }: SoapEdito
       {!isLocked && onSave && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
           <button onClick={handleSave} disabled={saving} style={{ padding: '6px 18px' }}>
-            {saving ? 'Saving...' : 'Save note'}
+            {saving ? t('Saving...') : t('Save note')}
           </button>
           {saved && (
-            <span style={{ fontSize: 12, color: '#1D9E75' }}>Saved</span>
+            <span style={{ fontSize: 12, color: '#1D9E75' }}>{t('Saved')}</span>
           )}
           {error && (
             <span style={{ fontSize: 12, color: '#E24B4A' }}>{error}</span>

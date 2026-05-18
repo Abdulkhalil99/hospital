@@ -42,7 +42,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   fontWeight: 600, color: '#555', borderBottom: '1px solid #eee',
                   whiteSpace: 'nowrap', width: col.width,
                 }}>
-                  {col.label}
+                  {t(col.label)}
                 </th>
               ))}
             </tr>
@@ -51,7 +51,7 @@ export function DataTable<T extends Record<string, unknown>>({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={columns.length} style={{ padding: 40, textAlign: 'center', color: '#aaa' }}>
-                  {empty === 'No data found' ? t('dash.nodata') : empty}
+                  {empty === 'No data found' ? t('dash.nodata') : t(empty)}
                 </td>
               </tr>
             )}

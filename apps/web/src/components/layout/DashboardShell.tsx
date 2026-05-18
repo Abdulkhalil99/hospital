@@ -68,8 +68,9 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
         <nav style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
           {navItems.map(item => {
             const active = pathname === item.path || pathname.startsWith(item.path + '/');
+            const itemLabel = t(item.label);
             return (
-              <button key={item.path} onClick={() => router.push(item.path)} title={collapsed ? item.label : undefined}
+              <button key={item.path} onClick={() => router.push(item.path)} title={collapsed ? itemLabel : undefined}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                   textAlign: rtl ? 'right' : 'left',
@@ -83,7 +84,7 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
                   fontSize: 13, border: 'none', transition: 'all .12s', cursor: 'pointer',
                 }}>
                 <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icon}</span>
-                {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+                {!collapsed && <span style={{ flex: 1 }}>{itemLabel}</span>}
               </button>
             );
           })}
@@ -132,7 +133,7 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
           padding: '14px 28px', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50,
         }}>
-          <h1 style={{ fontSize: 17, fontWeight: 600, color: '#1a1a2e' }}>{title}</h1>
+          <h1 style={{ fontSize: 17, fontWeight: 600, color: '#1a1a2e' }}>{t(title)}</h1>
           <span style={{ fontSize: 12, color: '#aaa' }}>
             {formatDateHeader(locale)}
           </span>

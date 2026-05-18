@@ -1,4 +1,6 @@
 'use client';
+import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 interface StatCardProps {
   label:    string;
@@ -10,6 +12,10 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, icon, color = '#185FA5', sub, onClick }: StatCardProps) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
+
   return (
     <div
       onClick={onClick}
@@ -36,8 +42,8 @@ export function StatCard({ label, value, icon, color = '#185FA5', sub, onClick }
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 3 }}>{label}</div>
-        {sub && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{sub}</div>}
+        <div style={{ fontSize: 12, color: '#888', marginTop: 3 }}>{t(label)}</div>
+        {sub && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{t(sub)}</div>}
       </div>
     </div>
   );

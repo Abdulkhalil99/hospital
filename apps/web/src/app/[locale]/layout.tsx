@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LocaleSync } from '@/components/layout/LocaleSync';
 
 export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'fa' }, { locale: 'ps' }];
@@ -11,5 +12,10 @@ export default function LocaleLayout({
   children: ReactNode;
   params:   { locale: string };
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <LocaleSync locale={locale} />
+      {children}
+    </>
+  );
 }

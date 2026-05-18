@@ -30,7 +30,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
     e.preventDefault(); setSaving(true); setMsg('');
     try {
       await api.patch('/admin/settings', settings);
-      setMsg('✅ Settings saved');
+      setMsg(`✅ ${t('Settings saved')}`);
     } catch (err: any) { setMsg(`❌ ${err.message}`); }
     setSaving(false);
   }
@@ -44,14 +44,14 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
 
   const field = (label: string, key: string, type = 'text') => (
     <div key={key}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4, color: '#555' }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4, color: '#555' }}>{t(label)}</label>
       <input type={type} value={settings[key] ?? ''} onChange={e => set(key, e.target.value)} />
     </div>
   );
 
   if (loading) return (
     <DashboardShell navItems={nav} title="Settings" locale={locale}>
-      <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Loading…</div>
+      <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>{t('dash.loading')}</div>
     </DashboardShell>
   );
 
@@ -63,7 +63,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
         {[['hospital','Hospital settings'],['flags','Feature flags']].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id as any)}
             style={{ flex: 1, padding: '8px 0', fontSize: 13, borderRadius: 7, border: 'none', cursor: 'pointer', background: tab === id ? '#185FA5' : 'transparent', color: tab === id ? '#fff' : '#555', fontWeight: tab === id ? 600 : 400 }}>
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -72,7 +72,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
       {tab === 'hospital' && (
         <form onSubmit={saveSettings}>
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Identity</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Identity')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {field('Hospital name (EN)', 'hospital_name')}
               {field('Hospital name (FA)', 'hospital_name_fa')}
@@ -84,7 +84,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
           </div>
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Address</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Address')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {field('Address (EN)', 'address')}
               {field('Address (FA)', 'address_fa')}
@@ -92,10 +92,10 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
           </div>
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Regional settings</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Regional settings')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Default language</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Default language')}</label>
                 <select value={settings.default_language ?? 'fa'} onChange={e => set('default_language', e.target.value)}>
                   <option value="en">English</option>
                   <option value="fa">فارسی</option>
@@ -108,7 +108,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
           </div>
 
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Clinical rules</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Clinical rules')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
               {field('Work start time', 'work_start_time', 'time')}
               {field('Work end time', 'work_end_time', 'time')}
@@ -120,7 +120,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
             <div style={{ marginTop: 14 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
                 <input type="checkbox" checked={!!settings.friday_closed} onChange={e => set('friday_closed', e.target.checked)} />
-                Friday is closed (no appointments)
+                {t('Friday is closed (no appointments)')}
               </label>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
           {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
 
           <button type="submit" disabled={saving} style={{ padding: '10px 28px' }}>
-            {saving ? 'Saving…' : 'Save settings'}
+            {saving ? t('Saving…') : t('Save settings')}
           </button>
         </form>
       )}
@@ -147,7 +147,7 @@ export default function SettingsPage({ params: { locale } }: { params: { locale:
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 12, color: f.is_enabled ? '#166534' : '#991b1b', fontWeight: 500 }}>
-                  {f.is_enabled ? 'Enabled' : 'Disabled'}
+                  {f.is_enabled ? t('Enabled') : t('Disabled')}
                 </span>
                 <div
                   onClick={() => toggleFlag(f.flag_key, f.is_enabled)}

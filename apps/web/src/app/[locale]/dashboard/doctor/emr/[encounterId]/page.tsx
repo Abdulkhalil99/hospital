@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter }            from 'next/navigation';
 import { api }                  from '@/lib/api';
+import { useT }                 from '@/lib/i18n';
 
 interface Props { params: { locale: string; encounterId: string } }
 
 export default function EncounterDetail({ params: { locale, encounterId } }: Props) {
   const router = useRouter();
+  const t = useT(locale);
   const [data,    setData]    = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
@@ -35,7 +37,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     setSaving(true); setMsg('');
     try {
       await api.post(`/emr/${encounterId}/notes`, { noteType: 'soap', ...soap });
-      setMsg('✅ SOAP note saved');
+      setMsg(`✅ ${t('SOAP note saved')}`);
     } catch (e: any) { setMsg(`❌ ${e.message}`); }
     setSaving(false);
   }
@@ -47,7 +49,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
         Object.entries(vitals).filter(([,v]) => v !== '').map(([k,v]) => [k, Number(v)])
       );
       await api.post(`/emr/${encounterId}/vitals`, body);
-      setMsg('✅ Vitals saved');
+      setMsg(`✅ ${t('Vitals saved')}`);
       const d = await api.get<any>(`/emr/${encounterId}/full`);
       setData(d);
     } catch (e: any) { setMsg(`❌ ${e.message}`); }
@@ -58,7 +60,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     setSaving(true); setMsg('');
     try {
       await api.post(`/emr/${encounterId}/diagnoses`, dx);
-      setMsg('✅ Diagnosis added');
+      setMsg(`✅ ${t('Diagnosis added')}`);
       const d = await api.get<any>(`/emr/${encounterId}/full`);
       setData(d);
     } catch (e: any) { setMsg(`❌ ${e.message}`); }
@@ -71,7 +73,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
       await api.post(`/emr/${encounterId}/prescriptions`, {
         ...rx, quantity: Number(rx.quantity), durationDays: Number(rx.durationDays) || undefined,
       });
-      setMsg('✅ Prescription added');
+      setMsg(`✅ ${t('Prescription added')}`);
       const d = await api.get<any>(`/emr/${encounterId}/full`);
       setData(d);
     } catch (e: any) { setMsg(`❌ ${e.message}`); }
@@ -82,7 +84,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     setSaving(true); setMsg('');
     try {
       await api.post(`/emr/${encounterId}/lab-orders`, lab);
-      setMsg('✅ Lab order added');
+      setMsg(`✅ ${t('Lab order added')}`);
       const d = await api.get<any>(`/emr/${encounterId}/full`);
       setData(d);
     } catch (e: any) { setMsg(`❌ ${e.message}`); }
@@ -90,18 +92,18 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
   }
 
   async function completeEncounter() {
-    if (!confirm('Mark this encounter as complete?')) return;
+    if (!confirm(t('Mark this encounter as complete?'))) return;
     await api.post(`/emr/${encounterId}/complete`, {});
     router.push(`/${locale}/dashboard/doctor/emr`);
   }
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>Loading…</div>;
-  if (!data)   return <div style={{ padding: 40, color: '#888' }}>Encounter not found</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#888' }}>{t('dash.loading')}</div>;
+  if (!data)   return <div style={{ padding: 40, color: '#888' }}>{t('Encounter not found')}</div>;
 
   const enc = data.encounter;
 
   const TABS = ['soap','vitals','diagnoses','prescriptions','lab'] as const;
-  const LABELS = ['SOAP Note','Vital Signs','Diagnoses','Prescriptions','Lab Orders'];
+  const LABELS = [t('SOAP Note'), t('nav.vitals'), t('emr.diagnoses'), t('emr.prescriptions'), t('emr.labOrders')];
 
   const fieldStyle = { marginBottom: 12 } as const;
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4, color: '#555' } as const;
@@ -111,21 +113,21 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 28px' }}>
       {/* Back */}
       <button onClick={() => router.back()} style={{ background: 'none', color: '#185FA5', border: 'none', padding: 0, fontSize: 13, marginBottom: 16, cursor: 'pointer' }}>
-        ← Back
+        ← {t('back')}
       </button>
 
       {/* Header */}
       <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '18px 22px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{enc.patient_name}</div>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>MRN: {enc.patient_mrn} · {enc.encounter_type} · {new Date(enc.started_at).toLocaleString()}</div>
-          {enc.chief_complaint && <div style={{ fontSize: 13, color: '#555', marginTop: 4 }}>Chief complaint: <strong>{enc.chief_complaint}</strong></div>}
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{t('dash.mrn')}: {enc.patient_mrn} · {enc.encounter_type} · {new Date(enc.started_at).toLocaleString()}</div>
+          {enc.chief_complaint && <div style={{ fontSize: 13, color: '#555', marginTop: 4 }}>{t('emr.chiefComplaint')}: <strong>{enc.chief_complaint}</strong></div>}
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {locked && <span style={{ fontSize: 12, background: '#f5f5f5', color: '#888', padding: '4px 10px', borderRadius: 6 }}>🔒 Locked</span>}
+          {locked && <span style={{ fontSize: 12, background: '#f5f5f5', color: '#888', padding: '4px 10px', borderRadius: 6 }}>🔒 {t('emr.locked')}</span>}
           {!locked && enc.status !== 'completed' && (
             <button onClick={completeEncounter} style={{ background: '#0F6E56', fontSize: 13 }}>
-              ✓ Complete encounter
+              ✓ {t('Complete encounter')}
             </button>
           )}
         </div>
@@ -153,7 +155,12 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
       {tab === 'soap' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {(['subjective','objective','assessment','plan'] as const).map((k, i) => {
-            const LABELS2 = ['S — Subjective (patient says)', 'O — Objective (you observe)', 'A — Assessment (diagnosis)', 'P — Plan (treatment)'];
+            const LABELS2 = [
+              t('S — Subjective (patient says)'),
+              t('O — Objective (you observe)'),
+              t('A — Assessment (diagnosis)'),
+              t('P — Plan (treatment)'),
+            ];
             const COLORS = ['#E6F1FB','#E1F5EE','#FAEEDA','#EEEDFE'];
             const BORDERS = ['#85B7EB','#5DCAA5','#EF9F27','#AFA9EC'];
             return (
@@ -165,14 +172,14 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
                   disabled={locked}
                   rows={6}
                   style={{ width: '100%', border: 'none', padding: '10px 12px', fontSize: 13, resize: 'vertical', fontFamily: 'inherit', background: locked ? '#fafafa' : '#fff' }}
-                  placeholder={`Enter ${k} notes…`}
+                  placeholder={t('Enter {{section}} notes…', { section: k })}
                 />
               </div>
             );
           })}
           {!locked && (
             <div style={{ gridColumn: '1/-1' }}>
-              <button onClick={saveSoap} disabled={saving}>{saving ? 'Saving…' : 'Save SOAP note'}</button>
+              <button onClick={saveSoap} disabled={saving}>{saving ? t('Saving…') : t('Save SOAP note')}</button>
             </div>
           )}
         </div>
@@ -183,7 +190,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
           {data.vitals?.length > 0 && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Previous vitals</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('Previous vitals')}</div>
               {data.vitals.slice(0,3).map((v: any, i: number) => (
                 <div key={i} style={{ fontSize: 12, color: '#555', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                   {new Date(v.recorded_at).toLocaleString()} — T:{v.temperature_c}°C BP:{v.bp_systolic}/{v.bp_diastolic} HR:{v.pulse_bpm} O2:{v.o2_saturation}% BMI:{v.bmi}
@@ -193,16 +200,16 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
           )}
           {!locked && (
             <>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Record new vitals</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{t('Record new vitals')}</div>
               <div style={grid2}>
                 {[['temperatureC','Temperature (°C)'],['bpSystolic','BP Systolic'],['bpDiastolic','BP Diastolic'],['pulseBpm','Pulse (bpm)'],['o2Saturation','O₂ Saturation (%)'],['weightKg','Weight (kg)']].map(([k,l]) => (
                   <div key={k} style={fieldStyle}>
-                    <label style={labelStyle}>{l}</label>
+                    <label style={labelStyle}>{t(l)}</label>
                     <input type="number" value={(vitals as any)[k]} onChange={e => setVitals(p => ({ ...p, [k]: e.target.value }))} placeholder="—" />
                   </div>
                 ))}
               </div>
-              <button onClick={saveVitals} disabled={saving}>{saving ? 'Saving…' : 'Save vitals'}</button>
+              <button onClick={saveVitals} disabled={saving}>{saving ? t('Saving…') : t('Save vitals')}</button>
             </>
           )}
         </div>
@@ -220,17 +227,17 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
           ))}
           {!locked && (
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Add diagnosis</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{t('Add diagnosis')}</div>
               <div style={grid2}>
-                <div style={fieldStyle}><label style={labelStyle}>ICD-10 Code *</label><input value={dx.icd10Code} onChange={e => setDx(p => ({...p, icd10Code: e.target.value}))} placeholder="e.g. J06.9" /></div>
-                <div style={fieldStyle}><label style={labelStyle}>Diagnosis name *</label><input value={dx.icd10Name} onChange={e => setDx(p => ({...p, icd10Name: e.target.value}))} placeholder="e.g. Acute URI" /></div>
-                <div style={fieldStyle}><label style={labelStyle}>Type</label>
+                <div style={fieldStyle}><label style={labelStyle}>{t('ICD-10 Code *')}</label><input value={dx.icd10Code} onChange={e => setDx(p => ({...p, icd10Code: e.target.value}))} placeholder={t('e.g. J06.9')} /></div>
+                <div style={fieldStyle}><label style={labelStyle}>{t('Diagnosis name *')}</label><input value={dx.icd10Name} onChange={e => setDx(p => ({...p, icd10Name: e.target.value}))} placeholder={t('e.g. Acute URI')} /></div>
+                <div style={fieldStyle}><label style={labelStyle}>{t('dash.type')}</label>
                   <select value={dx.diagnosisType} onChange={e => setDx(p => ({...p, diagnosisType: e.target.value}))}>
-                    <option value="primary">Primary</option><option value="secondary">Secondary</option><option value="differential">Differential</option>
+                    <option value="primary">{t('Primary')}</option><option value="secondary">{t('Secondary')}</option><option value="differential">{t('Differential')}</option>
                   </select>
                 </div>
               </div>
-              <button onClick={addDiagnosis} disabled={saving}>{saving ? 'Saving…' : 'Add diagnosis'}</button>
+              <button onClick={addDiagnosis} disabled={saving}>{saving ? t('Saving…') : t('Add diagnosis')}</button>
             </div>
           )}
         </div>
@@ -248,21 +255,21 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
           ))}
           {!locked && (
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Add prescription</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{t('Add prescription')}</div>
               <div style={grid2}>
                 {[['drugName','Drug name *'],['dosage','Dose *'],['frequency','Frequency *'],['quantity','Quantity *'],['unit','Unit'],['durationDays','Duration (days)']].map(([k,l]) => (
-                  <div key={k} style={fieldStyle}><label style={labelStyle}>{l}</label>
+                  <div key={k} style={fieldStyle}><label style={labelStyle}>{t(l)}</label>
                     <input value={(rx as any)[k]} onChange={e => setRx(p => ({...p, [k]: e.target.value}))} /></div>
                 ))}
-                <div style={fieldStyle}><label style={labelStyle}>Route</label>
+                <div style={fieldStyle}><label style={labelStyle}>{t('dash.route')}</label>
                   <select value={rx.route} onChange={e => setRx(p => ({...p, route: e.target.value}))}>
                     {['oral','iv','im','sc','topical','inhaled','other'].map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
-                <div style={{ ...fieldStyle, gridColumn: '1/-1' }}><label style={labelStyle}>Instructions</label>
-                  <input value={rx.instructions} onChange={e => setRx(p => ({...p, instructions: e.target.value}))} placeholder="e.g. Take with food" /></div>
+                <div style={{ ...fieldStyle, gridColumn: '1/-1' }}><label style={labelStyle}>{t('Instructions')}</label>
+                  <input value={rx.instructions} onChange={e => setRx(p => ({...p, instructions: e.target.value}))} placeholder={t('e.g. Take with food')} /></div>
               </div>
-              <button onClick={addPrescription} disabled={saving}>{saving ? 'Saving…' : 'Add prescription'}</button>
+              <button onClick={addPrescription} disabled={saving}>{saving ? t('Saving…') : t('Add prescription')}</button>
             </div>
           )}
         </div>
@@ -280,17 +287,17 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
           ))}
           {!locked && (
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Order lab test</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{t('Order lab test')}</div>
               <div style={grid2}>
-                <div style={fieldStyle}><label style={labelStyle}>Test name *</label><input value={lab.testName} onChange={e => setLab(p => ({...p, testName: e.target.value}))} placeholder="e.g. CBC" /></div>
-                <div style={fieldStyle}><label style={labelStyle}>Test code</label><input value={lab.testCode} onChange={e => setLab(p => ({...p, testCode: e.target.value}))} placeholder="e.g. CBC" /></div>
-                <div style={fieldStyle}><label style={labelStyle}>Urgency</label>
+                <div style={fieldStyle}><label style={labelStyle}>{t('Test name *')}</label><input value={lab.testName} onChange={e => setLab(p => ({...p, testName: e.target.value}))} placeholder={t('e.g. CBC')} /></div>
+                <div style={fieldStyle}><label style={labelStyle}>{t('Test code')}</label><input value={lab.testCode} onChange={e => setLab(p => ({...p, testCode: e.target.value}))} placeholder={t('e.g. CBC')} /></div>
+                <div style={fieldStyle}><label style={labelStyle}>{t('dash.urgency')}</label>
                   <select value={lab.urgency} onChange={e => setLab(p => ({...p, urgency: e.target.value}))}>
-                    <option value="routine">Routine</option><option value="urgent">Urgent</option><option value="stat">STAT</option>
+                    <option value="routine">{t('Routine')}</option><option value="urgent">{t('Urgent')}</option><option value="stat">STAT</option>
                   </select>
                 </div>
               </div>
-              <button onClick={addLabOrder} disabled={saving}>{saving ? 'Saving…' : 'Order test'}</button>
+              <button onClick={addLabOrder} disabled={saving}>{saving ? t('Saving…') : t('Order test')}</button>
             </div>
           )}
         </div>

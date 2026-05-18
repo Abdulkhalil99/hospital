@@ -1,4 +1,6 @@
 'use client';
+import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 const PRESETS = {
   success: { bg: '#f0fdf4', color: '#166534' },
@@ -17,6 +19,9 @@ interface BadgeProps {
 }
 
 export function Badge({ label, preset = 'gray', bg, color }: BadgeProps) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
   const style = bg && color ? { bg, color } : PRESETS[preset];
   return (
     <span style={{
@@ -29,7 +34,7 @@ export function Badge({ label, preset = 'gray', bg, color }: BadgeProps) {
       color:        style.color,
       whiteSpace:   'nowrap',
     }}>
-      {label}
+      {t(label)}
     </span>
   );
 }

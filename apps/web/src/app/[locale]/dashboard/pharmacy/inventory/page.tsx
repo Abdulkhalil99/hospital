@@ -65,7 +65,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         purchasePrice: form.purchasePrice ? Number(form.purchasePrice) : undefined,
         sellingPrice: form.sellingPrice ? Number(form.sellingPrice) : undefined,
       });
-      setMsg('Stock added successfully.');
+      setMsg(t('Stock added successfully.'));
       setForm({
         drugId: '',
         location: 'main_pharmacy',
@@ -77,7 +77,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
       });
       loadData();
     } catch (err: any) {
-      setMsg(err.message ?? 'Failed to add stock.');
+      setMsg(err.message ?? t('Failed to add stock.'));
     }
   }
 
@@ -92,33 +92,33 @@ export default function Page({ params: { locale } }: { params: { locale: string 
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20, marginBottom: 20 }}>
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Search inventory</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Search inventory')}</div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search drug, strength, location, or batch..."
+            placeholder={t('Search drug, strength, location, or batch...')}
           />
         </div>
 
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Add stock</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Add stock')}</div>
           <form onSubmit={addStock}>
             <div style={{ display: 'grid', gap: 10 }}>
               <select value={form.drugId} onChange={(e) => setForm((current) => ({ ...current, drugId: e.target.value }))} required>
-                <option value="">Select drug...</option>
+                <option value="">{t('Select drug...')}</option>
                 {drugs.map((drug) => (
                   <option key={drug.id} value={drug.id}>
                     {drug.generic_name} {drug.strength ? `- ${drug.strength}` : ''}
                   </option>
                 ))}
               </select>
-              <input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder="Location" required />
-              <input value={form.batchNumber} onChange={(e) => setForm((current) => ({ ...current, batchNumber: e.target.value }))} placeholder="Batch number" />
-              <input type="number" min="1" value={form.quantity} onChange={(e) => setForm((current) => ({ ...current, quantity: e.target.value }))} placeholder="Quantity" required />
+              <input value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} placeholder={t('Location')} required />
+              <input value={form.batchNumber} onChange={(e) => setForm((current) => ({ ...current, batchNumber: e.target.value }))} placeholder={t('Batch number')} />
+              <input type="number" min="1" value={form.quantity} onChange={(e) => setForm((current) => ({ ...current, quantity: e.target.value }))} placeholder={t('dash.quantity')} required />
               <input type="date" value={form.expiryDate} onChange={(e) => setForm((current) => ({ ...current, expiryDate: e.target.value }))} />
-              <input type="number" min="0" step="0.01" value={form.purchasePrice} onChange={(e) => setForm((current) => ({ ...current, purchasePrice: e.target.value }))} placeholder="Purchase price" />
-              <input type="number" min="0" step="0.01" value={form.sellingPrice} onChange={(e) => setForm((current) => ({ ...current, sellingPrice: e.target.value }))} placeholder="Selling price" />
-              <button type="submit">Add stock</button>
+              <input type="number" min="0" step="0.01" value={form.purchasePrice} onChange={(e) => setForm((current) => ({ ...current, purchasePrice: e.target.value }))} placeholder={t('Purchase price')} />
+              <input type="number" min="0" step="0.01" value={form.sellingPrice} onChange={(e) => setForm((current) => ({ ...current, sellingPrice: e.target.value }))} placeholder={t('Selling price')} />
+              <button type="submit">{t('Add stock')}</button>
             </div>
           </form>
         </div>

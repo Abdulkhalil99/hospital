@@ -43,7 +43,7 @@ export default function AuditPage({ params: { locale } }: { params: { locale: st
         {[['audit','Audit logs'],['security','Security events']].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id as any)}
             style={{ flex: 1, padding: '8px 0', fontSize: 13, borderRadius: 7, border: 'none', cursor: 'pointer', background: tab === id ? '#185FA5' : 'transparent', color: tab === id ? '#fff' : '#555', fontWeight: tab === id ? 600 : 400 }}>
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -52,10 +52,10 @@ export default function AuditPage({ params: { locale } }: { params: { locale: st
         <>
           {/* Filters */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-            <input value={filters.tableName} onChange={e => setFilters(p => ({...p, tableName: e.target.value}))} placeholder="Table name…" style={{ width: 200 }} />
+            <input value={filters.tableName} onChange={e => setFilters(p => ({...p, tableName: e.target.value}))} placeholder={t('Table name…')} style={{ width: 200 }} />
             <input type="date" value={filters.from} onChange={e => setFilters(p => ({...p, from: e.target.value}))} style={{ width: 'auto' }} />
             <input type="date" value={filters.to}   onChange={e => setFilters(p => ({...p, to:   e.target.value}))} style={{ width: 'auto' }} />
-            <button onClick={() => setFilters({ tableName: '', from: '', to: '' })} style={{ background: '#f0f0f0', color: '#555', padding: '8px 14px', fontSize: 13 }}>Clear</button>
+            <button onClick={() => setFilters({ tableName: '', from: '', to: '' })} style={{ background: '#f0f0f0', color: '#555', padding: '8px 14px', fontSize: 13 }}>{t('Clear')}</button>
           </div>
 
           <DataTable

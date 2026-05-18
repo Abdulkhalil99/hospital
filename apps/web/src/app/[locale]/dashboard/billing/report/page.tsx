@@ -4,6 +4,7 @@ import { DashboardShell }      from '@/components/layout/DashboardShell';
 import { StatCard }            from '@/components/layout/StatCard';
 import { DataTable }           from '@/components/layout/DataTable';
 import { api }                 from '@/lib/api';
+import { useT }                from '@/lib/i18n';
 
 const NAV = [
   { label: 'Invoices',     icon: '📄', path: '/dashboard/billing' },
@@ -13,6 +14,7 @@ const NAV = [
 ];
 
 export default function DailyReport({ params: { locale } }: { params: { locale: string } }) {
+  const t = useT(locale);
   const nav   = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
   const today = new Date().toISOString().split('T')[0];
 
@@ -39,7 +41,7 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
   return (
     <DashboardShell navItems={nav} title="Daily Revenue Report" locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>Report for: {date}</div>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{t('Report for')}: {date}</div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ width: 'auto' }} />
       </div>
 
@@ -50,7 +52,7 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Revenue by payment method</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Revenue by payment method')}</div>
         <DataTable
           keyField="payment_method" loading={loading} rows={revenue} empty="No transactions today"
           columns={[
@@ -64,7 +66,7 @@ export default function DailyReport({ params: { locale } }: { params: { locale: 
       </div>
 
       <div>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Cashier summary</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Cashier summary')}</div>
         <DataTable
           keyField="cashier_name" loading={loading} rows={cashier} empty="No cashier activity"
           columns={[

@@ -18,11 +18,15 @@ async function request<T>(
   token?:  string,
 ): Promise<T> {
   const authToken = token ?? getSession()?.accessToken;
+  const locale = typeof window !== 'undefined'
+    ? (window.location.pathname.split('/')[1] || 'en')
+    : 'en';
 
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': locale,
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,

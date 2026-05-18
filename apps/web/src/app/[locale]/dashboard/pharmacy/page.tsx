@@ -5,6 +5,7 @@ import { StatCard }        from '@/components/layout/StatCard';
 import { DataTable }       from '@/components/layout/DataTable';
 import { Badge }           from '@/components/layout/Badge';
 import { api }             from '@/lib/api';
+import { useT }            from '@/lib/i18n';
 
 const NAV = [
   { label: 'Pending Rx',  icon: '💊', path: '' },
@@ -14,6 +15,7 @@ const NAV = [
 ];
 
 export default function PharmacyDashboard({ params: { locale } }: { params: { locale: string } }) {
+  const t = useT(locale);
   const base = `/${locale}/dashboard/pharmacy`;
   const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
 
@@ -43,16 +45,16 @@ export default function PharmacyDashboard({ params: { locale } }: { params: { lo
 
       {alerts.length > 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fbbf24', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-          <div style={{ fontWeight: 600, color: '#92400e', marginBottom: 8 }}>⚠ Stock Alerts</div>
+          <div style={{ fontWeight: 600, color: '#92400e', marginBottom: 8 }}>⚠ {t('Stock Alerts')}</div>
           {alerts.slice(0,5).map((a: any, i: number) => (
             <div key={i} style={{ fontSize: 13, color: '#78350f', padding: '3px 0' }}>
-              <strong>{a.generic_name}</strong> — {String(a.alert_type).replace('_',' ')} ({a.quantity_on_hand} left)
+              <strong>{a.generic_name}</strong> — {t(String(a.alert_type).replace('_',' '))} ({a.quantity_on_hand} {t('left')})
             </div>
           ))}
         </div>
       )}
 
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Pending prescriptions</div>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Pending prescriptions')}</div>
       <DataTable
         keyField="id" loading={loading} rows={pending} empty="No pending prescriptions"
         columns={[

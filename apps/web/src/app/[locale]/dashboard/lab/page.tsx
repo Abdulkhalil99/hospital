@@ -5,6 +5,7 @@ import { StatCard }        from '@/components/layout/StatCard';
 import { DataTable }       from '@/components/layout/DataTable';
 import { Badge }           from '@/components/layout/Badge';
 import { api }             from '@/lib/api';
+import { useT }            from '@/lib/i18n';
 
 const NAV = [
   { label: 'Worklist',       icon: '🧪', path: '' },
@@ -14,6 +15,7 @@ const NAV = [
 ];
 
 export default function LabDashboard({ params: { locale } }: { params: { locale: string } }) {
+  const t = useT(locale);
   const base = `/${locale}/dashboard/lab`;
   const nav  = NAV.map(n => ({ ...n, path: n.path ? `${base}/${n.path}` : base }));
 
@@ -45,7 +47,7 @@ export default function LabDashboard({ params: { locale } }: { params: { locale:
 
       {critical.length > 0 && (
         <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-          <div style={{ fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>🚨 Critical Values — Requires Immediate Action</div>
+          <div style={{ fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>🚨 {t('Critical Values — Requires Immediate Action')}</div>
           {critical.map((c: any, i: number) => (
             <div key={i} style={{ fontSize: 13, color: '#7f1d1d', padding: '4px 0', borderTop: i > 0 ? '1px solid #fca5a5' : 'none' }}>
               <strong>{c.patient_name}</strong> ({c.patient_mrn}) — {c.component_name}: <strong>{c.result_value}</strong> <Badge label={String(c.flag)} preset="danger" />
@@ -54,7 +56,7 @@ export default function LabDashboard({ params: { locale } }: { params: { locale:
         </div>
       )}
 
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Today's worklist</div>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t("Today's worklist")}</div>
       <DataTable
         keyField="id" loading={loading} rows={worklist} empty="Worklist is empty"
         columns={[

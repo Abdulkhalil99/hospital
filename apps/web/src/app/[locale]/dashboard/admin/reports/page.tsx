@@ -96,7 +96,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
               color:      activeTab === tab.id ? '#fff'    : '#555',
               fontWeight: activeTab === tab.id ? 600       : 400, cursor: 'pointer',
             }}>
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
 
@@ -121,18 +121,18 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
           {/* KPI cards */}
           {kpi && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14, marginBottom: 24 }}>
-              <StatCard label="Total patients"      value={kpi.patients.total}                              icon="👥" color="#185FA5" sub={`+${kpi.patients.newToday} today`} />
+              <StatCard label="Total patients"      value={kpi.patients.total}                              icon="👥" color="#185FA5" sub={`+${kpi.patients.newToday} ${t('dash.today')}`} />
               <StatCard label="Available doctors"   value={`${kpi.doctors.available}/${kpi.doctors.total}`} icon="👨‍⚕️" color="#0F6E56" />
-              <StatCard label="Appts today"         value={kpi.appointments.today}                          icon="📅" color="#3C3489" sub={`${kpi.appointments.completed} completed`} />
-              <StatCard label="Revenue today"       value={`AFN ${Number(kpi.revenue.today).toLocaleString()}`} icon="💰" color="#0F6E56" sub={`Month: ${Number(kpi.revenue.month).toLocaleString()}`} />
-              <StatCard label="Active ED visits"    value={kpi.emergency.active}                            icon="🚨" color="#991b1b" sub={`${kpi.emergency.level1Today} ESI-1 today`} />
+              <StatCard label="Appts today"         value={kpi.appointments.today}                          icon="📅" color="#3C3489" sub={`${kpi.appointments.completed} ${t('completed')}`} />
+              <StatCard label="Revenue today"       value={`AFN ${Number(kpi.revenue.today).toLocaleString()}`} icon="💰" color="#0F6E56" sub={`${t('Month')}: ${Number(kpi.revenue.month).toLocaleString()}`} />
+              <StatCard label="Active ED visits"    value={kpi.emergency.active}                            icon="🚨" color="#991b1b" sub={`${kpi.emergency.level1Today} ESI-1 ${t('dash.today')}`} />
               <StatCard label="Pending lab orders"  value={kpi.lab.pending}                                 icon="🧪" color="#854F0B" sub={`${kpi.lab.criticalAlerts} critical`} />
             </div>
           )}
 
           {/* Revenue trend */}
           <div style={card}>
-            <div style={chartTitle}>Revenue — last {days} days (AFN)</div>
+            <div style={chartTitle}>{t('Revenue — last {{days}} days (AFN)', { days })}</div>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={revenue}>
                 <defs>
@@ -153,7 +153,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
           {/* Patients + Appointment status */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div style={card}>
-              <div style={chartTitle}>New patients per day</div>
+              <div style={chartTitle}>{t('New patients per day')}</div>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={patients}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -166,7 +166,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
             </div>
 
             <div style={card}>
-              <div style={chartTitle}>Appointments by status (30d)</div>
+              <div style={chartTitle}>{t('Appointments by status (30d)')}</div>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={apptStatus} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} label={renderAppointmentStatusLabel} labelLine={false} fontSize={11}>
@@ -184,7 +184,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
       {activeTab === 'revenue' && (
         <>
           <div style={card}>
-            <div style={chartTitle}>Daily revenue and transactions</div>
+            <div style={chartTitle}>{t('Daily revenue and transactions')}</div>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={revenue}>
                 <defs>
@@ -209,7 +209,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
           </div>
 
           <div style={card}>
-            <div style={chartTitle}>Outstanding invoices by age</div>
+            <div style={chartTitle}>{t('Outstanding invoices by age')}</div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={outstanding} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -227,7 +227,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
       {activeTab === 'clinical' && (
         <>
           <div style={card}>
-            <div style={chartTitle}>Top doctors by appointments (30d)</div>
+            <div style={chartTitle}>{t('Top doctors by appointments (30d)')}</div>
             <DataTable
               keyField="full_name" loading={loading} rows={topDocs} empty="No data"
               columns={[
@@ -249,7 +249,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
       {activeTab === 'pharmacy' && (
         <>
           <div style={card}>
-            <div style={chartTitle}>Top dispensed drugs (30d)</div>
+            <div style={chartTitle}>{t('Top dispensed drugs (30d)')}</div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={drugs} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -268,7 +268,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div style={card}>
-              <div style={chartTitle}>Visits by ESI level (30d)</div>
+              <div style={chartTitle}>{t('Visits by ESI level (30d)')}</div>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={emergency}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -285,7 +285,7 @@ export default function ReportsPage({ params: { locale } }: { params: { locale: 
             </div>
 
             <div style={card}>
-              <div style={chartTitle}>Average time in ED by ESI (minutes)</div>
+              <div style={chartTitle}>{t('Average time in ED by ESI (minutes)')}</div>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={emergency} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

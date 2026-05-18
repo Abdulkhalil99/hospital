@@ -96,12 +96,12 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
     setMsg('');
 
     if (!doctorRoleId) {
-      setMsg('❌ Doctor role is not configured in the system yet.');
+      setMsg(`❌ ${t('Doctor role is not configured in the system yet.')}`);
       return;
     }
 
     if (form.createSchedule && form.scheduleDays.length === 0) {
-      setMsg('❌ Select at least one working day or turn off schedule creation.');
+      setMsg(`❌ ${t('Select at least one working day or turn off schedule creation.')}`);
       return;
     }
 
@@ -149,15 +149,15 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
       await loadDoctors();
       setForm({ ...INITIAL_FORM, effectiveFrom: todayIso() });
       setShowCreate(false);
-      setMsg('✅ Doctor account created successfully.');
+      setMsg(`✅ ${t('Doctor account created successfully.')}`);
     } catch (err: any) {
       if (createdUserId && !doctorCreated) {
         try { await api.delete(`/admin/users/${createdUserId}`); } catch {}
       }
       const prefix = doctorCreated
-        ? '⚠ Doctor account was created, but the schedule setup did not finish.'
+        ? `⚠ ${t('Doctor account was created, but the schedule setup did not finish.')}`
         : '❌';
-      setMsg(`${prefix} ${err.message ?? 'Unable to create doctor.'}`);
+      setMsg(`${prefix} ${err.message ?? t('Unable to create doctor.')}`);
     } finally {
       setSaving(false);
     }
@@ -167,9 +167,9 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
     <DashboardShell navItems={nav} title="Doctors" locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 600, color: '#1f2937' }}>{doctors.length} doctors registered</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: '#1f2937' }}>{doctors.length} {t('doctors registered')}</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
-            Create both the login account and the medical profile from one place.
+            {t('Create both the login account and the medical profile from one place.')}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -186,10 +186,10 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               fontWeight: 500,
             }}
           >
-            Manage users
+            {t('Manage users')}
           </a>
           <button onClick={() => setShowCreate(prev => !prev)} disabled={!doctorRoleId} style={{ padding: '10px 14px' }}>
-            {showCreate ? 'Close form' : '+ Add doctor'}
+            {showCreate ? t('Close form') : `+ ${t('Add doctor')}`}
           </button>
         </div>
       </div>
@@ -209,9 +209,9 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
 
       {showCreate && (
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Create doctor account</div>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{t('Create doctor account')}</div>
           <div style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.6, marginBottom: 18 }}>
-            This creates a user login, assigns the doctor role, creates the doctor profile, and can also add a default weekly schedule.
+            {t('This creates a user login, assigns the doctor role, creates the doctor profile, and can also add a default weekly schedule.')}
           </div>
 
           <form onSubmit={handleCreate}>
@@ -225,7 +225,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
                 ['licenseNumber', 'License number *'],
               ].map(([key, label]) => (
                 <div key={key}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{label}</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t(label)}</label>
                   <input
                     type={key === 'password' ? 'password' : key === 'email' ? 'email' : 'text'}
                     value={String(form[key as keyof typeof INITIAL_FORM])}
@@ -236,7 +236,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               ))}
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Preferred language</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Preferred language')}</label>
                 <select value={form.preferredLanguage} onChange={e => setField('preferredLanguage', e.target.value)}>
                   <option value="en">English</option>
                   <option value="fa">فارسی</option>
@@ -245,7 +245,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Specialty</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('dash.specialty')}</label>
                 <select
                   value={form.specialtyId}
                   onChange={(e) => {
@@ -258,7 +258,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
                     }));
                   }}
                 >
-                  <option value="">Select specialty…</option>
+                  <option value="">{t('Select specialty…')}</option>
                   {specialties.map((specialty: any) => (
                     <option key={specialty.id} value={specialty.id}>
                       {specialty.name}
@@ -269,9 +269,9 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Department</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Department')}</label>
                 <select value={form.departmentId} onChange={e => setField('departmentId', e.target.value)}>
-                  <option value="">Select department…</option>
+                  <option value="">{t('Select department…')}</option>
                   {departments.map((department: any) => (
                     <option key={department.id} value={department.id}>{department.name}</option>
                   ))}
@@ -279,7 +279,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Consultation fee</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Consultation fee')}</label>
                 <input
                   type="number"
                   min="0"
@@ -290,7 +290,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>License expiry</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('License expiry')}</label>
                 <input
                   type="date"
                   value={form.licenseExpiresAt}
@@ -300,8 +300,8 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
             </div>
 
             <div style={{ marginBottom: 18 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Bio</label>
-              <textarea value={form.bio} onChange={e => setField('bio', e.target.value)} rows={3} placeholder="Optional profile summary…" />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Bio')}</label>
+              <textarea value={form.bio} onChange={e => setField('bio', e.target.value)} rows={3} placeholder={t('Optional profile summary…')} />
             </div>
 
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '16px 18px', marginBottom: 18 }}>
@@ -312,17 +312,17 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
                   onChange={e => setField('createSchedule', e.target.checked)}
                   style={{ width: 16, height: 16 }}
                 />
-                Add a default weekly schedule
+                {t('Add a default weekly schedule')}
               </label>
 
               {form.createSchedule && (
                 <>
                   <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-                    Without a schedule, this doctor will not show bookable appointment slots.
+                    {t('Without a schedule, this doctor will not show bookable appointment slots.')}
                   </div>
 
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Working days</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>{t('Working days')}</div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {DAY_OPTIONS.map((day) => {
                         const selected = form.scheduleDays.includes(day.value);
@@ -340,7 +340,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
                               fontSize: 12,
                             }}
                           >
-                            {day.label}
+                            {t(day.label)}
                           </button>
                         );
                       })}
@@ -349,27 +349,27 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Start time</label>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Start time')}</label>
                       <input type="time" value={form.scheduleStartTime} onChange={e => setField('scheduleStartTime', e.target.value)} required={form.createSchedule} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>End time</label>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('End time')}</label>
                       <input type="time" value={form.scheduleEndTime} onChange={e => setField('scheduleEndTime', e.target.value)} required={form.createSchedule} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Slot duration (min)</label>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Slot duration (min)')}</label>
                       <input type="number" min="5" max="120" value={form.slotDuration} onChange={e => setField('slotDuration', e.target.value)} required={form.createSchedule} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Max patients per slot</label>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Max patients per slot')}</label>
                       <input type="number" min="1" max="100" value={form.maxPatients} onChange={e => setField('maxPatients', e.target.value)} required={form.createSchedule} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Location</label>
-                      <input value={form.location} onChange={e => setField('location', e.target.value)} placeholder="Clinic room, ward, etc." />
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Location')}</label>
+                      <input value={form.location} onChange={e => setField('location', e.target.value)} placeholder={t('Clinic room, ward, etc.')} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Effective from</label>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Effective from')}</label>
                       <input type="date" value={form.effectiveFrom} onChange={e => setField('effectiveFrom', e.target.value)} required={form.createSchedule} />
                     </div>
                   </div>
@@ -379,7 +379,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button type="submit" disabled={saving || !doctorRoleId} style={{ padding: '10px 18px' }}>
-                {saving ? 'Creating…' : 'Create doctor'}
+                {saving ? t('Creating…') : t('Create doctor')}
               </button>
               <button
                 type="button"
@@ -389,7 +389,7 @@ export default function AdminDoctors({ params: { locale } }: { params: { locale:
                 }}
                 style={{ padding: '10px 18px', background: '#f3f4f6', color: '#374151' }}
               >
-                Cancel
+                {t('dash.cancel')}
               </button>
             </div>
           </form>

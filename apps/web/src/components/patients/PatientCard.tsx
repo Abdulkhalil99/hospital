@@ -1,4 +1,6 @@
 'use client';
+import { useParams } from 'next/navigation';
+import { formatDate, useT } from '@/lib/i18n';
 
 interface Patient {
   id: string; mrn: string; first_name: string; last_name: string;
@@ -8,6 +10,9 @@ interface Patient {
 }
 
 export function PatientCard({ patient }: { patient: Patient }) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
   const initials = (patient.first_name[0] + patient.last_name[0]).toUpperCase();
 
   const age = Math.floor(
@@ -34,7 +39,7 @@ export function PatientCard({ patient }: { patient: Patient }) {
             {patient.first_name} {patient.last_name}
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 1 }}>
-            MRN: {patient.mrn}
+            {t('dash.mrn')}: {patient.mrn}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -42,19 +47,19 @@ export function PatientCard({ patient }: { patient: Patient }) {
             <span style={{
               fontSize: 10, padding: '2px 7px', borderRadius: 3, fontWeight: 500,
               background: '#FCEBEB', color: '#791F1F',
-            }}>ALLERGY</span>
+            }}>{t('dash.allergy')}</span>
           )}
           {patient.is_vip && (
             <span style={{
               fontSize: 10, padding: '2px 7px', borderRadius: 3, fontWeight: 500,
               background: '#FAEEDA', color: '#633806',
-            }}>VIP</span>
+            }}>{t('VIP')}</span>
           )}
           {!patient.is_active && (
             <span style={{
               fontSize: 10, padding: '2px 7px', borderRadius: 3, fontWeight: 500,
               background: 'var(--color-background-secondary)', color: 'var(--color-text-tertiary)',
-            }}>INACTIVE</span>
+            }}>{t('inactive')}</span>
           )}
         </div>
       </div>
@@ -63,11 +68,11 @@ export function PatientCard({ patient }: { patient: Patient }) {
         <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
           <tbody>
             {[
-              ['Date of birth', `${new Date(patient.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} (${age} yrs)`],
-              ['Gender',        patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)],
-              ['Blood type',    patient.blood_type],
-              ['Phone',         patient.phone],
-              ...(patient.email ? [['Email', patient.email]] : []),
+              [t('dash.dob'), `${formatDate(patient.date_of_birth, locale)} (${age} ${t('patients.years')})`],
+              [t('dash.gender'), t(patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1))],
+              [t('dash.blood'), patient.blood_type],
+              [t('dash.phone'), patient.phone],
+              ...(patient.email ? [[t('Email'), patient.email]] : []),
             ].map(([label, value]) => (
               <tr key={label}>
                 <td style={{ color: 'var(--color-text-secondary)', padding: '3px 0', width: '40%' }}>{label}</td>

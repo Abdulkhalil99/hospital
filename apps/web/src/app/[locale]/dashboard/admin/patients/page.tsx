@@ -59,7 +59,7 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
       const res = await api.post<any>('/patients', form);
       // Response can be {patient: {...}} or the patient directly
       const patient = res?.patient ?? res;
-      setMsg(`✅ Patient registered — MRN: ${patient?.mrn ?? 'created'}`);
+      setMsg(`✅ ${t('Patient registered successfully. MRN: {{mrn}}', { mrn: patient?.mrn ?? 'created' })}`);
       setShowForm(false);
       setForm({ firstName: '', lastName: '', dateOfBirth: '', gender: 'male', phone: '', bloodType: 'unknown', preferredLanguage: 'fa', skipOtp: true });
       // Reload list after short delay
@@ -89,14 +89,14 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Search by name, MRN, or phone…"
+            placeholder={t('Search by name, MRN, or phone…')}
           />
         </div>
         <button onClick={load} style={{ background: '#f0f0f0', color: '#333', padding: '9px 16px', fontSize: 13 }}>
-          🔄 Refresh
+          🔄 {t('Refresh')}
         </button>
         <button onClick={() => setShowForm(p => !p)}>
-          {showForm ? '✕ Cancel' : '+ Register patient'}
+          {showForm ? `✕ ${t('dash.cancel')}` : `+ ${t('patients.register')}`}
         </button>
       </div>
 
@@ -114,41 +114,41 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
       {/* Register form */}
       {showForm && (
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '22px 24px', marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Register new patient</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Register new patient')}</div>
           <form onSubmit={handleRegister}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
               <div>
-                <label style={labelStyle}>First name *</label>
+                <label style={labelStyle}>{t('First name')} *</label>
                 <input value={form.firstName} onChange={e => setForm(p => ({...p, firstName: e.target.value}))} required placeholder="Ahmad" />
               </div>
               <div>
-                <label style={labelStyle}>Last name *</label>
+                <label style={labelStyle}>{t('Last name')} *</label>
                 <input value={form.lastName} onChange={e => setForm(p => ({...p, lastName: e.target.value}))} required placeholder="Karimi" />
               </div>
               <div>
-                <label style={labelStyle}>Date of birth *</label>
+                <label style={labelStyle}>{t('dash.dob')} *</label>
                 <input type="date" value={form.dateOfBirth} onChange={e => setForm(p => ({...p, dateOfBirth: e.target.value}))} required />
               </div>
               <div>
-                <label style={labelStyle}>Gender *</label>
+                <label style={labelStyle}>{t('dash.gender')} *</label>
                 <select value={form.gender} onChange={e => setForm(p => ({...p, gender: e.target.value}))}>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  <option value="male">{t('Male')}</option>
+                  <option value="female">{t('Female')}</option>
+                  <option value="other">{t('Other')}</option>
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Phone *</label>
+                <label style={labelStyle}>{t('dash.phone')} *</label>
                 <input value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} required placeholder="0700000000" />
               </div>
               <div>
-                <label style={labelStyle}>Blood type</label>
+                <label style={labelStyle}>{t('dash.blood')}</label>
                 <select value={form.bloodType} onChange={e => setForm(p => ({...p, bloodType: e.target.value}))}>
                   {['unknown','A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Preferred language</label>
+                <label style={labelStyle}>{t('Preferred language')}</label>
                 <select value={form.preferredLanguage} onChange={e => setForm(p => ({...p, preferredLanguage: e.target.value}))}>
                   <option value="fa">فارسی</option>
                   <option value="ps">پښتو</option>
@@ -158,10 +158,10 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="submit" disabled={saving}>
-                {saving ? 'Registering…' : 'Register patient'}
+                {saving ? t('Registering…') : t('dash.register')}
               </button>
               <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f0f0f0', color: '#555' }}>
-                Cancel
+                {t('dash.cancel')}
               </button>
             </div>
           </form>
@@ -173,7 +173,7 @@ export default function AdminPatients({ params: { locale } }: { params: { locale
         keyField="id"
         loading={loading}
         rows={patients}
-        empty={q ? `No patients found matching "${q}"` : 'No patients registered yet. Click "+ Register patient" to add one.'}
+        empty={q ? t('No patients found matching "{{query}}"', { query: q }) : 'No patients registered yet. Click "+ Register patient" to add one.'}
         columns={[
           { key: 'mrn', label: 'MRN', width: '150px',
             render: r => <span style={{ fontFamily: 'monospace', color: '#185FA5', fontWeight: 600 }}>{String(r.mrn ?? '—')}</span> },

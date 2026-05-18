@@ -40,16 +40,16 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
 
   async function unlockUser(user: any) {
     await api.patch(`/admin/users/${user.id}`, { isLocked: false });
-    setMsg(`✅ ${user.username} unlocked`);
+    setMsg(`✅ ${t('{{username}} unlocked', { username: user.username })}`);
     loadUsers();
     setTimeout(() => setMsg(''), 3000);
   }
 
   async function resetPw(userId: string, username: string) {
-    const pw = prompt(`New password for ${username} (min 8 chars):`);
+    const pw = prompt(t('New password for {{username}} (min 8 chars):', { username }));
     if (!pw || pw.length < 8) return;
     await api.post(`/admin/users/${userId}/reset-password`, { newPassword: pw });
-    setMsg(`✅ Password reset for ${username}`);
+    setMsg(`✅ ${t('Password reset for {{username}}', { username })}`);
     setTimeout(() => setMsg(''), 3000);
   }
 
@@ -77,7 +77,7 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
     e.preventDefault(); setMsg('');
     try {
       await api.post('/admin/users', newUser);
-      setMsg('✅ User created');
+      setMsg(`✅ ${t('User created')}`);
       setShowCreate(false);
       setNewUser({ username: '', email: '', password: '', fullName: '', preferredLanguage: 'en', roleIds: [] });
       loadUsers();
@@ -88,10 +88,10 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
     <DashboardShell navItems={nav} title="User Management" locale={locale}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ flex: 1, maxWidth: 400 }}>
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search username, email, name…" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder={t('Search username, email, name…')} />
         </div>
         <button onClick={() => setShowCreate(p => !p)} style={{ marginLeft: 12 }}>
-          {showCreate ? '✕ Cancel' : '+ Create user'}
+          {showCreate ? `✕ ${t('dash.cancel')}` : `+ ${t('Create user')}`}
         </button>
       </div>
 
@@ -100,12 +100,12 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
       {/* Create form */}
       {showCreate && (
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px', marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Create new user</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>{t('Create new user')}</div>
           <form onSubmit={handleCreate}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               {[['username','Username *'],['fullName','Full name *'],['email','Email *'],['password','Password *']].map(([k,l]) => (
                 <div key={k}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{l}</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t(l)}</label>
                   <input
                     type={k === 'password' ? 'password' : 'text'}
                     value={(newUser as any)[k]}
@@ -115,7 +115,7 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
                 </div>
               ))}
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Language</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Language')}</label>
                 <select value={newUser.preferredLanguage} onChange={e => setNewUser(p => ({...p, preferredLanguage: e.target.value}))}>
                   <option value="en">English</option>
                   <option value="fa">فارسی</option>
@@ -123,13 +123,13 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Roles</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{t('Roles')}</label>
                 <select multiple value={newUser.roleIds} onChange={e => setNewUser(p => ({...p, roleIds: Array.from(e.target.selectedOptions, o => o.value)}))} style={{ height: 80 }}>
                   {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
             </div>
-            <button type="submit">Create user</button>
+            <button type="submit">{t('Create user')}</button>
           </form>
         </div>
       )}
@@ -156,12 +156,12 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
           { key: 'actions', label: '', width: '220px',
             render: r => (
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => setSelected(r)} style={{ fontSize: 11, padding: '3px 8px', background: '#f0f0f0', color: '#333' }}>Roles</button>
+                <button onClick={() => setSelected(r)} style={{ fontSize: 11, padding: '3px 8px', background: '#f0f0f0', color: '#333' }}>{t('Roles')}</button>
                 <button onClick={() => toggleActive(r)} style={{ fontSize: 11, padding: '3px 8px', background: r.is_active ? '#fef2f2' : '#f0fdf4', color: r.is_active ? '#991b1b' : '#166534' }}>
-                  {r.is_active ? 'Deactivate' : 'Activate'}
+                  {r.is_active ? t('Deactivate') : t('Activate')}
                 </button>
-                {r.is_locked && <button onClick={() => unlockUser(r)} style={{ fontSize: 11, padding: '3px 8px', background: '#fffbeb', color: '#92400e' }}>Unlock</button>}
-                <button onClick={() => resetPw(String(r.id), String(r.username))} style={{ fontSize: 11, padding: '3px 8px', background: '#f0f0f0', color: '#333' }}>Reset pw</button>
+                {r.is_locked && <button onClick={() => unlockUser(r)} style={{ fontSize: 11, padding: '3px 8px', background: '#fffbeb', color: '#92400e' }}>{t('Unlock')}</button>}
+                <button onClick={() => resetPw(String(r.id), String(r.username))} style={{ fontSize: 11, padding: '3px 8px', background: '#f0f0f0', color: '#333' }}>{t('Reset pw')}</button>
               </div>
             )},
         ]}
@@ -172,12 +172,12 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '24px 28px', width: 480, maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>Roles — {selected.username}</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{t('Roles')} — {selected.username}</div>
               <button onClick={() => setSelected(null)} style={{ background: 'none', color: '#888', border: 'none', fontSize: 18, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Current roles</div>
+              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{t('Current roles')}</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {((selected.roles as string[]) ?? []).map((role: string, i: number) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#eff6ff', padding: '4px 10px', borderRadius: 6 }}>
@@ -188,12 +188,12 @@ export default function UsersPage({ params: { locale } }: { params: { locale: st
                     }} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', fontSize: 14, padding: 0 }}>×</button>
                   </div>
                 ))}
-                {((selected.roles as string[]) ?? []).length === 0 && <span style={{ fontSize: 13, color: '#aaa' }}>No roles assigned</span>}
+                {((selected.roles as string[]) ?? []).length === 0 && <span style={{ fontSize: 13, color: '#aaa' }}>{t('No roles assigned')}</span>}
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Add role</div>
+              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{t('Add role')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {roles
                   .filter((r: any) => !((selected.roles as string[]) ?? []).includes(r.name))

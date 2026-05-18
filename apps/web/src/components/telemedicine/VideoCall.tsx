@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 interface Message {
   id:          string;
@@ -25,6 +27,9 @@ const ICE_SERVERS = [
 ];
 
 export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }: VideoCallProps) {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
+  const t = useT(locale);
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerRef        = useRef<RTCPeerConnection | null>(null);
@@ -218,15 +223,15 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
     return (
       <div style={{ padding: '2rem', maxWidth: 500, margin: '0 auto' }}>
         <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 16 }}>
-          Consent for Telemedicine Consultation
+          {t('Consent for Telemedicine Consultation')}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.7, marginBottom: 24 }}>
-          By joining this video consultation, you consent to the telemedicine session with
-          Dr. {doctorName}. The consultation is not recorded unless explicitly agreed.
-          Your privacy is protected. You may end the call at any time.
+          {t('By joining this video consultation, you consent to the telemedicine session with Dr. {{doctorName}}. The consultation is not recorded unless explicitly agreed. Your privacy is protected. You may end the call at any time.', {
+            doctorName,
+          })}
         </p>
         <button onClick={giveConsent} style={{ width: '100%', padding: '10px 0', fontSize: 14 }}>
-          I Agree — Join Consultation
+          {t('I Agree — Join Consultation')}
         </button>
       </div>
     );
@@ -237,9 +242,9 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📞</div>
-        <h2 style={{ fontSize: 18, fontWeight: 500 }}>Call ended</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 500 }}>{t('Call ended')}</h2>
         <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 8 }}>
-          The telemedicine session has ended.
+          {t('The telemedicine session has ended.')}
         </p>
       </div>
     );
@@ -267,9 +272,9 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
           }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>⏳</div>
-              <div style={{ fontSize: 16 }}>Waiting for {otherName}...</div>
+              <div style={{ fontSize: 16 }}>{t('Waiting for {{name}}...', { name: otherName })}</div>
               <div style={{ fontSize: 12, color: '#aaa', marginTop: 8 }}>
-                Session ID: {sessionId.slice(0, 8)}
+                {t('Session ID')}: {sessionId.slice(0, 8)}
               </div>
             </div>
           </div>
@@ -345,14 +350,14 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
           borderLeft: '1px solid rgba(255,255,255,0.1)',
         }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 500 }}>
-            Chat with {otherName}
+            {t('Chat with {{name}}', { name: otherName })}
           </div>
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {messages.length === 0 && (
               <div style={{ fontSize: 12, color: '#666', textAlign: 'center', marginTop: 40 }}>
-                No messages yet
+                {t('No messages yet')}
               </div>
             )}
             {messages.map(m => (
@@ -375,7 +380,7 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendChat()}
-              placeholder="Type a message..."
+              placeholder={t('Type a message...')}
               style={{
                 flex: 1, padding: '6px 10px', borderRadius: 6,
                 border: '1px solid rgba(255,255,255,0.2)',
@@ -389,7 +394,7 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
                 padding: '6px 12px', borderRadius: 6, border: 'none',
                 background: '#185FA5', color: '#fff', fontSize: 12, cursor: 'pointer',
               }}
-            >Send</button>
+            >{t('Send')}</button>
           </div>
         </div>
       )}

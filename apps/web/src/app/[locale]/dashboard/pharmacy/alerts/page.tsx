@@ -42,7 +42,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         <StatCard label="Expiring in 90 days" value={expiringSoon.length} icon="⏳" color="#185FA5" />
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Low stock and out-of-stock alerts</div>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Low stock and out-of-stock alerts')}</div>
       <DataTable
         keyField="inventory_id"
         loading={loading}
@@ -77,7 +77,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         ]}
       />
 
-      <div style={{ fontSize: 15, fontWeight: 600, margin: '24px 0 12px' }}>Upcoming expiries</div>
+      <div style={{ fontSize: 15, fontWeight: 600, margin: '24px 0 12px' }}>{t('Upcoming expiries')}</div>
       <DataTable
         keyField="id"
         loading={loading}
@@ -101,7 +101,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
             render: (row) => {
               const expiry = row.expiry_date ? new Date(String(row.expiry_date)) : null;
               const days = expiry ? Math.ceil((expiry.getTime() - Date.now()) / 86400000) : null;
-              return days === null ? '—' : <Badge label={`${days} day${days === 1 ? '' : 's'}`} preset={days <= 30 ? 'danger' : 'warning'} />;
+              return days === null ? '—' : <Badge label={`${days} ${t(days === 1 ? 'day' : 'days')}`} preset={days <= 30 ? 'danger' : 'warning'} />;
             },
           },
         ]}

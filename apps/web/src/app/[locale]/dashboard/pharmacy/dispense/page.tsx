@@ -71,7 +71,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         witnessId: witnessId || undefined,
         notes: notes || undefined,
       });
-      setMsg(`Dispensed ${selectedPrescription.drug_name} successfully.`);
+      setMsg(t('Dispensed {{drug}} successfully.', { drug: selectedPrescription.drug_name }));
       setSelectedPrescriptionId('');
       setInventoryId('');
       setQuantityDispensed('1');
@@ -81,7 +81,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
       setOverrideInteractionWarning(false);
       loadData();
     } catch (err: any) {
-      setMsg(err.message ?? 'Dispense failed.');
+      setMsg(err.message ?? t('Dispense failed.'));
     }
   }
 
@@ -89,7 +89,7 @@ export default function Page({ params: { locale } }: { params: { locale: string 
     <DashboardShell navItems={nav} title="Dispense" locale={locale}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20, alignItems: 'start' }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Pending prescriptions</div>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{t('Pending prescriptions')}</div>
           <DataTable
             keyField="id"
             loading={loading}
@@ -132,50 +132,50 @@ export default function Page({ params: { locale } }: { params: { locale: string 
         </div>
 
         <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Dispense selected prescription</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Dispense selected prescription')}</div>
           {!selectedPrescription ? (
-            <div style={{ fontSize: 13, color: '#888' }}>Select a pending prescription from the table to begin dispensing.</div>
+            <div style={{ fontSize: 13, color: '#888' }}>{t('Select a pending prescription from the table to begin dispensing.')}</div>
           ) : (
             <>
               <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, marginBottom: 14 }}>
                 <strong>{selectedPrescription.patient_name}</strong> ({selectedPrescription.patient_mrn})<br />
-                Drug: <strong>{selectedPrescription.drug_name}</strong><br />
-                Dose: {selectedPrescription.dosage} · {selectedPrescription.frequency}
+                {t('Drug')}: <strong>{selectedPrescription.drug_name}</strong><br />
+                {t('dash.dose')}: {selectedPrescription.dosage} · {selectedPrescription.frequency}
               </div>
 
               <form onSubmit={handleDispense}>
                 <div style={{ display: 'grid', gap: 10 }}>
                   <select value={inventoryId} onChange={(e) => setInventoryId(e.target.value)} required>
-                    <option value="">Select inventory batch...</option>
+                    <option value="">{t('Select inventory batch...')}</option>
                     {inventoryOptions.map((row) => (
                       <option key={row.id} value={row.id}>
-                        {row.generic_name} · {row.location} · batch {row.batch_number ?? 'N/A'} · stock {row.quantity_on_hand}
+                        {row.generic_name} · {row.location} · {t('batch')} {row.batch_number ?? 'N/A'} · {t('stock')} {row.quantity_on_hand}
                       </option>
                     ))}
                   </select>
 
                   {selectedInventory && (
                     <div style={{ fontSize: 12, color: '#555', background: '#f8fafc', borderRadius: 8, padding: '10px 12px' }}>
-                      Available stock: <strong>{selectedInventory.quantity_on_hand}</strong><br />
-                      Batch: <strong>{selectedInventory.batch_number ?? 'N/A'}</strong><br />
-                      Expiry: <strong>{selectedInventory.expiry_date ? String(selectedInventory.expiry_date).slice(0, 10) : 'N/A'}</strong>
+                      {t('Available stock')}: <strong>{selectedInventory.quantity_on_hand}</strong><br />
+                      {t('Batch')}: <strong>{selectedInventory.batch_number ?? 'N/A'}</strong><br />
+                      {t('Expiry')}: <strong>{selectedInventory.expiry_date ? String(selectedInventory.expiry_date).slice(0, 10) : 'N/A'}</strong>
                     </div>
                   )}
 
-                  <input type="number" min="0.1" step="0.1" value={quantityDispensed} onChange={(e) => setQuantityDispensed(e.target.value)} placeholder="Quantity dispensed" required />
-                  <input value={witnessId} onChange={(e) => setWitnessId(e.target.value)} placeholder="Witness ID for controlled drugs (optional)" />
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Dispensing notes..." />
+                  <input type="number" min="0.1" step="0.1" value={quantityDispensed} onChange={(e) => setQuantityDispensed(e.target.value)} placeholder={t('Quantity dispensed')} required />
+                  <input value={witnessId} onChange={(e) => setWitnessId(e.target.value)} placeholder={t('Witness ID for controlled drugs (optional)')} />
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder={t('Dispensing notes...')} />
 
                   <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#555' }}>
                     <input type="checkbox" checked={overrideAllergyWarning} onChange={(e) => setOverrideAllergyWarning(e.target.checked)} />
-                    Override non-severe allergy warning
+                    {t('Override non-severe allergy warning')}
                   </label>
                   <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#555' }}>
                     <input type="checkbox" checked={overrideInteractionWarning} onChange={(e) => setOverrideInteractionWarning(e.target.checked)} />
-                    Override moderate interaction warning
+                    {t('Override moderate interaction warning')}
                   </label>
 
-                  <button type="submit" disabled={!selectedInventory}>Confirm dispense</button>
+                  <button type="submit" disabled={!selectedInventory}>{t('Confirm dispense')}</button>
                 </div>
               </form>
             </>

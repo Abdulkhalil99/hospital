@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { DashboardShell }      from '@/components/layout/DashboardShell';
 import { Badge }               from '@/components/layout/Badge';
 import { api }                 from '@/lib/api';
+import { useT }                from '@/lib/i18n';
 
 const NAV = [
   { label: 'Invoices',     icon: '📄', path: '/dashboard/billing' },
@@ -12,6 +13,7 @@ const NAV = [
 ];
 
 export default function PaymentsPage({ params: { locale } }: { params: { locale: string } }) {
+  const t = useT(locale);
   const nav = NAV.map(n => ({ ...n, path: `/${locale}${n.path}` }));
 
   const [search,   setSearch]   = useState('');
@@ -42,7 +44,7 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
         amount: Number(amount), paymentMethod: method,
         referenceNumber: reference || undefined,
       });
-      setMsg(`✅ Payment recorded. Receipt: ${res.receipt?.receipt_number}`);
+      setMsg(`✅ ${t('Payment recorded. Receipt: {{receipt}}', { receipt: res.receipt?.receipt_number ?? '—' })}`);
       setInvoice(null); setAmount(''); setReference('');
       const updated = await api.get<any>('/billing?status=issued&limit=30');
       setInvoices(updated.data ?? []);
@@ -56,9 +58,9 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
 
         {/* Invoice list */}
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Select invoice</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Select invoice')}</div>
           <div style={{ marginBottom: 12 }}>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search patient name…" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Search patient name…')} />
           </div>
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
             {invoices.filter((inv: any) => !search || inv.patient_name?.toLowerCase().includes(search.toLowerCase())).map((inv: any) => (
@@ -86,10 +88,10 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
 
         {/* Payment form */}
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Record payment</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Record payment')}</div>
           {!invoice ? (
             <div style={{ background: '#f8f9fa', borderRadius: 10, padding: '40px 20px', textAlign: 'center', color: '#aaa' }}>
-              Select an invoice from the list
+              {t('Select an invoice from the list')}
             </div>
           ) : (
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
@@ -97,30 +99,30 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{invoice.invoice.invoice_number}</div>
                 <div style={{ fontSize: 13, color: '#555' }}>{invoice.invoice.patient_name}</div>
                 <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 13 }}>
-                  <span>Total: <strong>AFN {Number(invoice.invoice.total_amount).toLocaleString()}</strong></span>
-                  <span>Paid: <strong style={{ color: '#166534' }}>AFN {Number(invoice.invoice.paid_amount).toLocaleString()}</strong></span>
-                  <span>Balance: <strong style={{ color: '#991b1b' }}>AFN {Number(invoice.invoice.balance_due).toLocaleString()}</strong></span>
+                  <span>{t('dash.total')}: <strong>AFN {Number(invoice.invoice.total_amount).toLocaleString()}</strong></span>
+                  <span>{t('dash.paid')}: <strong style={{ color: '#166534' }}>AFN {Number(invoice.invoice.paid_amount).toLocaleString()}</strong></span>
+                  <span>{t('dash.balance')}: <strong style={{ color: '#991b1b' }}>AFN {Number(invoice.invoice.balance_due).toLocaleString()}</strong></span>
                 </div>
               </div>
 
               <form onSubmit={handlePayment}>
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Amount *</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Amount *')}</label>
                   <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" step="0.01" />
                 </div>
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Payment method</label>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('dash.method')}</label>
                   <select value={method} onChange={e => setMethod(e.target.value)}>
-                    {['cash','card','bank_transfer','insurance','mobile_pay','other'].map(m => <option key={m} value={m}>{m.replace('_',' ')}</option>)}
+                    {['cash','card','bank_transfer','insurance','mobile_pay','other'].map(m => <option key={m} value={m}>{t(m.replace('_',' '))}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Reference number</label>
-                  <input value={reference} onChange={e => setReference(e.target.value)} placeholder="Card/transfer reference…" />
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Reference number')}</label>
+                  <input value={reference} onChange={e => setReference(e.target.value)} placeholder={t('Card/transfer reference…')} />
                 </div>
                 {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
                 <button type="submit" disabled={loading} style={{ width: '100%' }}>
-                  {loading ? 'Processing…' : `Record payment — AFN ${Number(amount || 0).toLocaleString()}`}
+                  {loading ? t('Processing…') : `${t('Record payment')} — AFN ${Number(amount || 0).toLocaleString()}`}
                 </button>
               </form>
             </div>
