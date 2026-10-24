@@ -74,7 +74,7 @@ export class EmrService {
     return this.repo.findEncountersByDoctor(doctorId, date);
   }
 
-  async completeEncounter(id: string) {
+  async completeEncounter(id: string, completedBy?: string) {
     const encounter = await this.getEncounterOrFail(id);
     if (encounter.status === 'completed') {
       throw new ValidationError([{ message: 'Encounter is already completed.' }]);
@@ -89,6 +89,7 @@ export class EmrService {
       encounterId: id,
       patientId:   encounter.patient_id,
       doctorId:    encounter.doctor_id,
+      completedBy,
     });
 
     return updated;

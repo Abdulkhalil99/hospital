@@ -175,7 +175,16 @@ Package-specific examples:
 ```bash
 pnpm --filter @medicore/api dev
 pnpm --filter @medicore/web dev
+pnpm --filter @medicore/api test:unit --runInBand
+pnpm --filter @medicore/api test:integration
 ```
+
+Unit tests do not need PostgreSQL or Redis. Integration tests create a unique,
+temporary database, apply the SQL migrations, and remove only that database when
+finished. The database user needs permission to create databases and extensions.
+Set `TEST_DATABASE_URL` to use a different PostgreSQL server; its database name
+must end in `_test` (or `_test_<suffix>`). The configured database is never
+dropped or used as a template.
 
 ## Internationalization
 
@@ -199,6 +208,9 @@ Production-oriented Docker, Redis, PostgreSQL, and Nginx config lives in:
 - [`infrastructure/docker/.env.prod.example`](infrastructure/docker/.env.prod.example)
 
 Treat that setup as a starting point, not a finished deployment template.
+The production Compose stack runs migrations before starting the API. Its web
+API and WebSocket URLs are build arguments; rebuild the web image after changing
+`API_URL`. `API_URL` is the public origin, without a trailing slash or `/api/v1`.
 Before public deployment you should at minimum review:
 
 - secrets and credential rotation
@@ -213,6 +225,9 @@ Before public deployment you should at minimum review:
 
 Current focus is local development and feature iteration.
 
+See [the project review](docs/PROJECT_STATUS.md) for the completed fixes and
+remaining feature gaps from the latest review.
+
 What is in good shape:
 
 - broad product coverage across major hospital workflows
@@ -224,7 +239,7 @@ What still needs polish:
 
 - production hardening
 - broader automated test reliability
-- lint/build cleanup in some app areas
+- existing lint warnings and gradual replacement of loosely typed data objects
 - security review for a public/shared deployment
 
 ## Disclaimer

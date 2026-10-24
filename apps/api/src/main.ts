@@ -1,4 +1,3 @@
-import 'tsconfig-paths/register';
 import http from 'http';
 import { config }          from '@/config';
 import { logger }          from '@/infrastructure/logger/logger';

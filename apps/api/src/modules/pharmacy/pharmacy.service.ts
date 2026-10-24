@@ -175,36 +175,41 @@ export class PharmacyService {
       }]);
     }
 
-    // 8. Deduct from inventory
-    const { before, after } = await this.repo.adjustInventoryQuantity(
-      data.inventoryId, -data.quantityDispensed,
-    );
-
-    // 9. Record stock movement
-    await this.repo.recordStockMovement(
-      data.drugId, data.inventoryId,
-      'dispensed', -data.quantityDispensed,
-      before, after,
-      data.prescriptionId, data.notes ?? null, dispensedBy,
-    );
-
-    // 10. Create dispensing record
-    const record = await this.repo.createDispensingRecord({
+    // 8. Commit the dispense as one transaction. This locks the prescription
+    // and inventory rows and relies on the database trigger for one deduction.
+    const committed = await this.repo.dispenseAtomically({
       prescriptionId:     data.prescriptionId,
-      patientId:          prescription.patient_id,
       drugId:             data.drugId,
       inventoryId:        data.inventoryId,
       quantityDispensed:  data.quantityDispensed,
       dispensedBy,
-      allergyChecked:     true,
-      interactionChecked: true,
       interactionsFound:  interactions.length > 0 ? interactions : null,
       witnessId:          data.witnessId ?? null,
       notes:              data.notes     ?? null,
     });
 
-    // 11. Update prescription status
-    await this.repo.updatePrescriptionStatus(data.prescriptionId, 'dispensed');
+    if (!committed.ok) {
+      switch (committed.reason) {
+        case 'prescription_missing':
+          throw new NotFoundError('Prescription', data.prescriptionId);
+        case 'prescription_not_pending':
+          throw new ConflictError(
+            `Prescription status is '${committed.status}'. Only pending prescriptions can be dispensed.`,
+          );
+        case 'inventory_missing':
+          throw new NotFoundError('Inventory record', data.inventoryId);
+        case 'inventory_drug_mismatch':
+          throw new ValidationError([{
+            message: 'Inventory record does not match the specified drug.',
+          }]);
+        case 'insufficient_stock':
+          throw new ConflictError(
+            `Insufficient stock. Requested: ${data.quantityDispensed}, Available: ${committed.available}`,
+          );
+      }
+    }
+
+    const { record, after } = committed;
 
     logger.info('Drug dispensed', {
       recordId:      record.id,

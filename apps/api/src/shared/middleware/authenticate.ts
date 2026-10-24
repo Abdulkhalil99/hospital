@@ -25,6 +25,10 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
   const token   = header.split(' ')[1];
   const payload = verifyAccessToken(token);
 
+  if (payload.permissions?.includes('telemedicine')) {
+    throw new UnauthorizedError('Session invitation tokens cannot access application APIs');
+  }
+
   req.user = {
     id:          payload.sub,
     username:    payload.username,

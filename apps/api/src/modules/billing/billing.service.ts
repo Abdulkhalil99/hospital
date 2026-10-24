@@ -117,24 +117,23 @@ export class BillingService {
 
   // ── Payments ──────────────────────────────────────────────
   async recordPayment(data: RecordPaymentInput, receivedBy: string) {
-    const invoice = await this.getInvoiceOrFail(data.invoiceId);
-
-    if (['draft', 'cancelled', 'void'].includes(invoice.status)) {
-      throw new ForbiddenError(
-        `Cannot record payment for an invoice with status '${invoice.status}'.`,
-      );
+    const committed = await this.repo.recordPaymentAtomically(data, receivedBy);
+    if (!committed.ok) {
+      switch (committed.reason) {
+        case 'invoice_missing':
+          throw new NotFoundError('Invoice', data.invoiceId);
+        case 'invalid_status':
+          throw new ForbiddenError(
+            `Cannot record payment for an invoice with status '${committed.status}'.`,
+          );
+        case 'amount_exceeds_balance':
+          throw new ValidationError([{
+            message: `Payment amount (${data.amount}) exceeds balance due (${committed.balance}).`,
+          }]);
+      }
     }
 
-    if (data.amount > invoice.balance_due) {
-      throw new ValidationError([{
-        message: `Payment amount (${data.amount}) exceeds balance due (${invoice.balance_due}).`,
-      }]);
-    }
-
-    const payment = await this.repo.recordPayment(data, receivedBy);
-
-    // Auto-generate receipt
-    const receipt = await this.repo.generateReceipt(payment.id, data.invoiceId, receivedBy);
+    const { payment, receipt, patientId } = committed;
 
     logger.info('Payment recorded', {
       invoiceId:     data.invoiceId,
@@ -146,7 +145,7 @@ export class BillingService {
     eventBus.emit(EVENTS.PAYMENT_RECEIVED, {
       invoiceId:     data.invoiceId,
       amount:        data.amount,
-      patientId:     invoice.patient_id,
+      patientId,
       receiptNumber: receipt.receipt_number,
     });
 
@@ -160,13 +159,28 @@ export class BillingService {
 
   // ── Discounts ─────────────────────────────────────────────
   async requestDiscount(data: ApplyDiscountInput, requestedBy: string) {
-    await this.getInvoiceOrFail(data.invoiceId);
+    const invoice = await this.getInvoiceOrFail(data.invoiceId);
+
+    if (['cancelled', 'void', 'paid'].includes(invoice.status)) {
+      throw new ForbiddenError(
+        `Cannot discount an invoice with status '${invoice.status}'.`,
+      );
+    }
 
     if (data.discountType === 'percentage' && !data.percentage) {
       throw new ValidationError([{ message: 'percentage is required for discount type "percentage".' }]);
     }
     if (data.discountType === 'fixed' && !data.amount) {
       throw new ValidationError([{ message: 'amount is required for discount type "fixed".' }]);
+    }
+    if (
+      data.discountType === 'fixed' &&
+      data.amount !== undefined &&
+      data.amount > Number(invoice.subtotal) + Number(invoice.tax_amount)
+    ) {
+      throw new ValidationError([{
+        message: 'Fixed discount cannot exceed the invoice total.',
+      }]);
     }
 
     const discount = await this.repo.requestDiscount({
@@ -183,9 +197,30 @@ export class BillingService {
   }
 
   async approveDiscount(discountId: string, approvedBy: string) {
-    await this.repo.approveDiscount(discountId, approvedBy);
+    const result = await this.repo.approveDiscountAtomically(discountId, approvedBy);
+    if (!result.ok) {
+      switch (result.reason) {
+        case 'discount_missing':
+          throw new NotFoundError('Discount', discountId);
+        case 'discount_not_pending':
+          throw new ConflictError(`Discount is already '${result.status}'.`);
+        case 'invoice_missing':
+          throw new NotFoundError('Invoice for discount', discountId);
+        case 'invalid_discount':
+          throw new ValidationError([{ message: 'Discount value is invalid for this invoice.' }]);
+        case 'total_below_paid':
+          throw new ConflictError(
+            `Discount would reduce the invoice below the amount already paid (${result.paidAmount}).`,
+          );
+      }
+    }
     logger.info('Discount approved', { discountId, by: approvedBy });
-    return { message: 'Discount applied to invoice.' };
+    return {
+      message: 'Discount applied to invoice.',
+      invoiceId: result.invoiceId,
+      discountAmount: result.discountAmount,
+      totalAmount: result.totalAmount,
+    };
   }
 
   async getPendingDiscounts() {

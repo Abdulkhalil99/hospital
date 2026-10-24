@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface QueueToken {
   id:           string;
@@ -29,88 +30,81 @@ export function useQueue(doctorId: string, token: string) {
     connected: false, calledToken: null,
   });
 
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const connect = useCallback(() => {
     if (!doctorId || !token) return;
 
-    const url = `${WS_URL.replace('http', 'ws')}?token=${token}`;
-    const ws  = new WebSocket(url);
+    const socket = io(WS_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+    });
 
-    ws.onopen = () => {
+    socket.on('connect', () => {
       setState(s => ({ ...s, connected: true }));
-      ws.send(JSON.stringify({ event: 'join_room', data: { room: `queue:doctor:${doctorId}` } }));
-    };
+      socket.emit('join_room', { room: `queue:doctor:${doctorId}` });
+    });
 
-    ws.onmessage = (msg) => {
-      try {
-        const { event, data } = JSON.parse(msg.data);
+    socket.on('queue:snapshot', (data) => {
+      setState(s => ({
+        ...s,
+        tokens:                 data.tokens ?? [],
+        totalWaiting:           data.totalWaiting ?? 0,
+        avgConsultationMinutes: data.avgConsultationMinutes ?? 15,
+      }));
+    });
 
-        if (event === 'queue:snapshot') {
-          setState(s => ({
-            ...s,
-            tokens:                 data.tokens ?? [],
-            totalWaiting:           data.totalWaiting ?? 0,
-            avgConsultationMinutes: data.avgConsultationMinutes ?? 15,
-          }));
-        }
+    socket.on('queue:token_added', (data) => {
+      setState(s => ({ ...s, tokens: [...s.tokens, data.token] }));
+    });
 
-        if (event === 'queue:token_added') {
-          setState(s => ({ ...s, tokens: [...s.tokens, data.token] }));
-        }
+    socket.on('queue:patient_called', (data) => {
+      setState(s => ({
+        ...s,
+        calledToken: data,
+        tokens: s.tokens.map(t =>
+          t.id === data.tokenId ? { ...t, status: 'called' } : t,
+        ),
+      }));
+    });
 
-        if (event === 'queue:patient_called') {
-          setState(s => ({
-            ...s,
-            calledToken: data,
-            tokens: s.tokens.map(t =>
-              t.id === data.tokenId ? { ...t, status: 'called' } : t,
-            ),
-          }));
-        }
+    socket.on('queue:token_updated', (data) => {
+      setState(s => ({
+        ...s,
+        tokens: s.tokens.map(t =>
+          t.id === data.tokenId ? { ...t, ...data } : t,
+        ),
+      }));
+    });
 
-        if (event === 'queue:token_updated') {
-          setState(s => ({
-            ...s,
-            tokens: s.tokens.map(t =>
-              t.id === data.tokenId ? { ...t, ...data } : t,
-            ),
-          }));
-        }
+    socket.on('queue:token_removed', (data) => {
+      setState(s => ({
+        ...s,
+        tokens: s.tokens.filter(t => t.id !== data.tokenId),
+      }));
+    });
 
-        if (event === 'queue:token_removed') {
-          setState(s => ({
-            ...s,
-            tokens: s.tokens.filter(t => t.id !== data.tokenId),
-          }));
-        }
+    socket.on('queue:wait_updated', (data) => {
+      setState(s => ({
+        ...s,
+        avgConsultationMinutes: data.avgWait,
+        totalWaiting:           data.totalWaiting,
+      }));
+    });
 
-        if (event === 'queue:wait_updated') {
-          setState(s => ({
-            ...s,
-            avgConsultationMinutes: data.avgWait,
-            totalWaiting:           data.totalWaiting,
-          }));
-        }
-      } catch { /* ignore parse errors */ }
-    };
-
-    ws.onclose = () => {
+    socket.on('disconnect', () => {
       setState(s => ({ ...s, connected: false }));
-      reconnectRef.current = setTimeout(connect, 3000);
-    };
+    });
 
-    ws.onerror = () => ws.close();
-
-    socketRef.current = ws;
+    socketRef.current = socket;
   }, [doctorId, token]);
 
   useEffect(() => {
     connect();
     return () => {
-      if (reconnectRef.current) clearTimeout(reconnectRef.current);
-      socketRef.current?.close();
+      socketRef.current?.disconnect();
+      socketRef.current = null;
     };
   }, [connect]);
 

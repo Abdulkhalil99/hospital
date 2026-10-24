@@ -1,4 +1,26 @@
-version: '3.9'
+x-api: &api-service
+  image: medicore-api:local
+  build:
+    context: ../..
+    dockerfile: apps/api/Dockerfile
+  environment:
+    NODE_ENV:     production
+    PORT:         3000
+    DATABASE_URL: postgresql://medicore_user:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/medicore_db
+    REDIS_URL:    redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379
+    JWT_SECRET:   ${JWT_SECRET:?Set JWT_SECRET}
+    CORS_ORIGINS: ${WEB_URL:?Set WEB_URL}
+    WEB_URL:      ${WEB_URL:?Set WEB_URL}
+    SMTP_HOST:    ${SMTP_HOST:-localhost}
+    SMTP_PORT:    ${SMTP_PORT:-587}
+    SMTP_USER:    ${SMTP_USER:-}
+    SMTP_PASS:    ${SMTP_PASS:-}
+    SMTP_FROM:    ${SMTP_FROM:-noreply@medicore.local}
+    SMTP_SECURE:  ${SMTP_SECURE:-false}
+    TWILIO_ACCOUNT_SID:  ${TWILIO_ACCOUNT_SID:-}
+    TWILIO_AUTH_TOKEN:   ${TWILIO_AUTH_TOKEN:-}
+    TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+  networks: [medicore]
 
 services:
   postgres:
@@ -8,11 +30,9 @@ services:
     environment:
       POSTGRES_DB:       medicore_db
       POSTGRES_USER:     medicore_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     networks: [medicore]
     healthcheck:
       test:     ["CMD-SHELL", "pg_isready -U medicore_user -d medicore_db"]
@@ -24,7 +44,9 @@ services:
     image: redis:7-alpine
     container_name: medicore_redis
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD}", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
     volumes:
       - redis_data:/data
     networks: [medicore]
@@ -34,26 +56,25 @@ services:
       timeout:  5s
       retries:  5
 
+  migrate:
+    <<: *api-service
+    command: ["node", "dist/infrastructure/database/migrate.js"]
+    restart: "no"
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres: { condition: service_healthy }
+
   api:
-    build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
+    <<: *api-service
     container_name: medicore_api
     restart: unless-stopped
-    environment:
-      NODE_ENV:     production
-      PORT:         3000
-      DATABASE_URL: postgresql://medicore_user:${POSTGRES_PASSWORD}@postgres:5432/medicore_db
-      REDIS_URL:    redis://:${REDIS_PASSWORD}@redis:6379
-      JWT_SECRET:   ${JWT_SECRET}
-      CORS_ORIGINS: ${WEB_URL}
-      WEB_URL:      ${WEB_URL}
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
-    networks: [medicore]
+      migrate:  { condition: service_completed_successfully }
     healthcheck:
-      test:     ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      test:     ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout:  10s
       retries:  3
@@ -62,12 +83,16 @@ services:
     build:
       context: ../..
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${API_URL:?Set API_URL}/api/v1
+        NEXT_PUBLIC_WS_URL:  ${API_URL:?Set API_URL}
     container_name: medicore_web
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${API_URL}
-      NEXT_PUBLIC_WS_URL:  ${API_URL}
-    depends_on: [api]
+      NEXT_PUBLIC_API_URL: ${API_URL:?Set API_URL}/api/v1
+      NEXT_PUBLIC_WS_URL:  ${API_URL:?Set API_URL}
+    depends_on:
+      api: { condition: service_healthy }
     networks: [medicore]
 
   nginx:

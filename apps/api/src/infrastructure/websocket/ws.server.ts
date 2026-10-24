@@ -1,8 +1,9 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketServer, Socket } from 'socket.io';
-import jwt from 'jsonwebtoken';
 import { config } from '@/config';
 import { logger } from '@/infrastructure/logger/logger';
+import { verifyAccessToken } from '@/shared/utils/jwt.util';
+import { canJoinRoom } from './room-access';
 
 let io: SocketServer | null = null;
 
@@ -17,12 +18,11 @@ export function initWebSocket(httpServer: HttpServer): SocketServer {
       socket.handshake.auth.token ||
       socket.handshake.query.token as string;
 
-    if (!token) {
+    if (typeof token !== 'string' || !token) {
       return next(new Error('Authentication required'));
     }
     try {
-      const payload = jwt.verify(token, config.jwt.secret) as jwt.JwtPayload;
-      (socket as Socket & { user: unknown }).user = payload;
+      socket.data.user = verifyAccessToken(token);
       next();
     } catch {
       next(new Error('Invalid token'));
@@ -36,13 +36,19 @@ export function initWebSocket(httpServer: HttpServer): SocketServer {
   io.on('connection', (socket: Socket) => {
     logger.info('WS client connected', { socketId: socket.id });
 
-    socket.on('join_room', (data: { room: string }) => {
-      socket.join(data.room);
-      logger.debug('WS join', { socketId: socket.id, room: data.room });
+    socket.on('join_room', (data?: { room?: unknown }) => {
+      const user = socket.data.user;
+      if (!user || !canJoinRoom(user, data?.room)) {
+        socket.emit('room:error', { message: 'Not authorized to join this room' });
+        return;
+      }
+      const room = data!.room as string;
+      socket.join(room);
+      logger.debug('WS join', { socketId: socket.id, room });
     });
 
-    socket.on('leave_room', (data: { room: string }) => {
-      socket.leave(data.room);
+    socket.on('leave_room', (data?: { room?: unknown }) => {
+      if (typeof data?.room === 'string') socket.leave(data.room);
     });
 
     socket.on('disconnect', () => {
@@ -60,7 +66,7 @@ export function getIO(): SocketServer {
 
 // Emit to everyone subscribed to a doctor's queue room
 export function emitToQueue(doctorId: string, event: string, data: unknown): void {
-  getIO().to(`queue:doctor:${doctorId}`).emit(event, data);
+  io?.to(`queue:doctor:${doctorId}`).emit(event, data);
 }
 
 // Emit to all clients subscribed to the emergency department room

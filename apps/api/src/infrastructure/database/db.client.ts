@@ -11,7 +11,7 @@ export function getDb(): Pool {
       max:              config.db.poolMax,
       idleTimeoutMillis:config.db.poolIdle,
       connectionTimeoutMillis: config.db.poolAcquire,
-      ssl: config.isProd ? { rejectUnauthorized: false } : false,
+      ssl: config.db.ssl ? { rejectUnauthorized: true } : false,
     });
 
     pool.on('error', (err) => {

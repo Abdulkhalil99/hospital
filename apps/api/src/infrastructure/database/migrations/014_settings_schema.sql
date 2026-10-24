@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS settings;
+
 CREATE TABLE settings.hospital_settings (
   id                       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   hospital_name            VARCHAR(200) NOT NULL DEFAULT 'MediCore Hospital',

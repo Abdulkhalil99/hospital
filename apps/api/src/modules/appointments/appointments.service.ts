@@ -59,15 +59,12 @@ export class AppointmentsService {
       throw new ConflictError(`Time slot ${data.scheduledStart} is fully booked.`);
     }
 
-    // 2. Double-check in DB (race condition guard)
-    const taken = await this.repo.isSlotTaken(data.doctorId, data.scheduledDate, data.scheduledStart);
-    if (taken) throw new ConflictError(`Time slot ${data.scheduledStart} was just booked. Please choose another.`);
-
-    // 3. Create appointment
+    // 2. Recheck capacity and insert atomically in the database.
     const appt = await this.repo.create(
-      { ...data, startTime: data.scheduledStart } as CreateAppointmentInput & { startTime: string },
+      data,
       slot.endTime,
       createdBy,
+      slot.maxPatients,
     );
 
     logger.info('Appointment booked', {

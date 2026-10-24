@@ -1,13 +1,11 @@
 import type { ApiResponse } from '@medicore/shared-types';
+import { getSession } from '@/lib/auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 class ApiClient {
   private getAuthHeaders(): Record<string, string> {
-    // Get token from your auth store
-    const token = typeof window !== 'undefined' 
-      ? localStorage.getItem('accessToken') 
-      : null;
+    const token = getSession()?.accessToken;
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 

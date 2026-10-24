@@ -90,24 +90,27 @@ export class AuthService {
 
   async refresh(rawToken: string): Promise<AuthTokens> {
     const tokenHash = hashRefreshToken(rawToken);
-    const stored    = await this.repo.findRefreshToken(tokenHash);
+    const { raw, hash } = signRefreshToken();
+    const stored = await this.repo.rotateRefreshToken(tokenHash, hash, refreshTokenExpiry());
 
-    if (!stored) throw new UnauthorizedError('Invalid refresh token');
-
-    if (stored.revoked_at) {
-      await this.repo.revokeAllUserTokens(stored.user_id);
-      logger.warn('Refresh token reuse detected — all tokens revoked', { userId: stored.user_id });
-      throw new UnauthorizedError('Session expired. Please log in again.');
+    if (!stored) {
+      const rejected = await this.repo.findRefreshToken(tokenHash);
+      if (rejected?.revoked_at) {
+        await this.repo.revokeAllUserTokens(rejected.user_id);
+        logger.warn('Refresh token reuse detected — all tokens revoked', { userId: rejected.user_id });
+        throw new UnauthorizedError('Session expired. Please log in again.');
+      }
+      if (rejected && new Date(rejected.expires_at) <= new Date()) {
+        throw new UnauthorizedError('Refresh token expired. Please log in again.');
+      }
+      throw new UnauthorizedError('Invalid refresh token');
     }
-
-    if (new Date(stored.expires_at) < new Date()) {
-      throw new UnauthorizedError('Refresh token expired. Please log in again.');
-    }
-
-    await this.repo.revokeRefreshToken(tokenHash);
 
     const user = await this.repo.findUserById(stored.user_id);
-    if (!user || !user.is_active) throw new UnauthorizedError('Account inactive');
+    if (!user || !user.is_active) {
+      await this.repo.revokeAllUserTokens(stored.user_id);
+      throw new UnauthorizedError('Account inactive');
+    }
 
     const [roles, permissions] = await Promise.all([
       this.repo.getUserRoles(user.id),
@@ -120,9 +123,6 @@ export class AuthService {
       roles:       roles.map((r: any) => r.name),
       permissions: permissions.map((p: any) => p.code),
     });
-
-    const { raw, hash } = signRefreshToken();
-    await this.repo.saveRefreshToken(user.id, hash, refreshTokenExpiry(), {});
 
     return { accessToken, refreshToken: raw, expiresIn: 15 * 60 };
   }

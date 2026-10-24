@@ -222,20 +222,25 @@ export class LaboratoryService {
     if (resultIds.length === 0) {
       throw new ValidationError([{ message: 'No result IDs provided.' }]);
     }
-    await this.repo.validateResults(resultIds, validatedBy);
+    const validatedIds = await this.repo.validateResults(resultIds, validatedBy);
 
     // Fire event — notification module sends result-ready notification
-    eventBus.emit(EVENTS.LAB_RESULT_READY, { resultIds });
+    if (validatedIds.length > 0) {
+      eventBus.emit(EVENTS.LAB_RESULT_READY, { resultIds: validatedIds });
+    }
 
-    logger.info('Lab results validated', { count: resultIds.length, by: validatedBy });
-    return { validated: resultIds.length };
+    logger.info('Lab results validated', { count: validatedIds.length, by: validatedBy });
+    return { validated: validatedIds.length };
   }
 
   // ── Release to patient portal ─────────────────────────────
   async releaseResults(resultIds: string[], releasedBy: string) {
-    await this.repo.releaseResults(resultIds, releasedBy);
-    logger.info('Lab results released to patient portal', { count: resultIds.length });
-    return { released: resultIds.length };
+    if (resultIds.length === 0) {
+      throw new ValidationError([{ message: 'No result IDs provided.' }]);
+    }
+    const releasedIds = await this.repo.releaseResults(resultIds, releasedBy);
+    logger.info('Lab results released to patient portal', { count: releasedIds.length });
+    return { released: releasedIds.length };
   }
 
   // ── Fetch results ─────────────────────────────────────────

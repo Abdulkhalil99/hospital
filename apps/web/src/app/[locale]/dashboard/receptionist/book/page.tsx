@@ -16,6 +16,8 @@ export default function BookAppointment({ params: { locale } }: { params: { loca
   const [patSearch, setPatSearch] = useState('');
   const [msg,       setMsg]       = useState('');
   const [loading,   setLoading]   = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [availabilityVersion, setAvailabilityVersion] = useState(0);
 
   const [form, setForm] = useState({
     patientId: '', doctorId: '', appointmentTypeId: '',
@@ -27,35 +29,54 @@ export default function BookAppointment({ params: { locale } }: { params: { loca
     Promise.all([
       api.get<any[]>('/doctors'),
       api.get<any[]>('/appointments/types'),
-    ]).then(([d, t]) => { setDoctors(d ?? []); setTypes(t ?? []); });
+    ]).then(([d, t]) => { setDoctors(d ?? []); setTypes(t ?? []); })
+      .catch((err: Error) => setMsg(`❌ ${err.message}`));
   }, []);
 
   useEffect(() => {
-    if (!patSearch.trim()) { setPatients([]); return; }
-    const t = setTimeout(() =>
-      api.get<any>(`/patients?q=${patSearch}&limit=5`).then(r => setPatients(r.data ?? [])), 300);
-    return () => clearTimeout(t);
-  }, [patSearch]);
+    if (!patSearch.trim() || form.patientId) { setPatients([]); return; }
+    let active = true;
+    setPatients([]);
+    const timer = setTimeout(() => {
+      api.get<any>(`/patients?q=${encodeURIComponent(patSearch.trim())}&limit=5`)
+        .then(r => { if (active) setPatients(r.data ?? []); })
+        .catch((err: Error) => { if (active) setMsg(`❌ ${err.message}`); });
+    }, 300);
+    return () => { active = false; clearTimeout(timer); };
+  }, [patSearch, form.patientId]);
 
   useEffect(() => {
-    if (!form.doctorId || !form.scheduledDate) { setSlots([]); return; }
+    let active = true;
+    setSlots([]);
+    setForm(p => ({ ...p, scheduledStart: '' }));
+    if (!form.doctorId || !form.scheduledDate) { setSlotsLoading(false); return; }
+    setSlotsLoading(true);
     api.get<any>(`/doctors/${form.doctorId}/availability?date=${form.scheduledDate}`)
-      .then(r => setSlots(r.slots?.filter((s: any) => s.available) ?? []));
-  }, [form.doctorId, form.scheduledDate]);
+      .then(r => { if (active) setSlots(r.slots?.filter((s: any) => s.available) ?? []); })
+      .catch((err: Error) => { if (active) setMsg(`❌ ${err.message}`); })
+      .finally(() => { if (active) setSlotsLoading(false); });
+    return () => { active = false; };
+  }, [form.doctorId, form.scheduledDate, availabilityVersion]);
 
   async function handleBook(e: React.FormEvent) {
-    e.preventDefault(); setMsg(''); setLoading(true);
+    e.preventDefault();
+    if (loading || slotsLoading || !form.patientId || !slots.some(slot => slot.startTime === form.scheduledStart)) return;
+    setMsg(''); setLoading(true);
     try {
       await api.post('/appointments', form);
       setMsg(`✅ ${t('Appointment booked successfully')}`);
       setForm(p => ({ ...p, scheduledStart: '', notes: '' }));
+      setAvailabilityVersion(version => version + 1);
     } catch (err: any) {
       setMsg(`❌ ${err.message}`);
     }
     setLoading(false);
   }
 
-  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const set = (k: string, v: string) => setForm(p => ({
+    ...p, [k]: v,
+    ...((k === 'doctorId' || k === 'scheduledDate') ? { scheduledStart: '' } : {}),
+  }));
 
   return (
     <DashboardShell navItems={nav} title={t('nav.book')} locale={locale}>
@@ -66,7 +87,7 @@ export default function BookAppointment({ params: { locale } }: { params: { loca
             {/* Patient search */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Patient *')}</label>
-              <input value={patSearch} onChange={e => setPatSearch(e.target.value)} placeholder={t('Search patient by name, MRN, or phone…')} />
+              <input value={patSearch} onChange={e => { setPatSearch(e.target.value); set('patientId', ''); }} placeholder={t('Search patient by name, MRN, or phone…')} />
               {patients.length > 0 && (
                 <div style={{ border: '1px solid #e8e8e8', borderTop: 'none', borderRadius: '0 0 8px 8px', background: '#fff' }}>
                   {patients.map((p: any) => (
@@ -134,7 +155,7 @@ export default function BookAppointment({ params: { locale } }: { params: { loca
             )}
             {form.doctorId && form.scheduledDate && slots.length === 0 && (
               <div style={{ fontSize: 13, color: '#888', padding: '10px 14px', background: '#f5f5f5', borderRadius: 6, marginBottom: 16 }}>
-                {t('No available slots for this date')}
+                {t(slotsLoading ? 'dash.loading' : 'No available slots for this date')}
               </div>
             )}
 
@@ -146,7 +167,7 @@ export default function BookAppointment({ params: { locale } }: { params: { loca
 
             {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
 
-            <button type="submit" disabled={loading || !form.patientId || !form.scheduledStart} style={{ padding: '10px 28px' }}>
+            <button type="submit" disabled={loading || slotsLoading || !form.patientId || !form.scheduledStart} style={{ padding: '10px 28px' }}>
               {loading ? t('Booking…') : t('dash.book')}
             </button>
           </div>

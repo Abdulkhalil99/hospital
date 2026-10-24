@@ -1,7 +1,9 @@
+import { getSession } from '@/lib/auth';
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const token = getSession()?.accessToken;
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: {

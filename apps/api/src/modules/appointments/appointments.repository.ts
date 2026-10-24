@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
-import { getDb } from '@/infrastructure/database/db.client';
+import { getDb, withTransaction } from '@/infrastructure/database/db.client';
+import { ConflictError } from '@/shared/errors/app-error';
 import { CreateAppointmentInput, AppointmentRow, QueueTokenRow } from './appointments.types';
 
 export class AppointmentsRepository {
@@ -61,43 +62,45 @@ export class AppointmentsRepository {
     return { rows, total: Number(cr[0].count) };
   }
 
-  async isSlotTaken(
-    doctorId: string, date: string, start: string,
-  ): Promise<boolean> {
-    const { rows } = await this.db.query<{ count: string }>(
-      `SELECT COUNT(*) FROM appointments.appointments
-       WHERE doctor_id      = $1
-         AND scheduled_date = $2::DATE
-         AND scheduled_start = $3::TIME
-         AND status NOT IN ('cancelled','no_show')
-         AND is_deleted = FALSE`,
-      [doctorId, date, start],
-    );
-    return Number(rows[0].count) > 0;
-  }
-
   async create(
     data: CreateAppointmentInput,
     endTime: string,
     createdBy: string,
+    maxPatients = 1,
   ): Promise<AppointmentRow> {
-    const { rows } = await this.db.query<AppointmentRow>(
-      `INSERT INTO appointments.appointments
+    return withTransaction(async client => {
+      // Hold a stable row lock through the count and insert, so two booking
+      // requests cannot both claim the last place in a slot.
+      await client.query('SELECT id FROM doctors.doctors WHERE id = $1 FOR UPDATE', [data.doctorId]);
+      const { rows: counts } = await client.query<{ count: string }>(
+        `SELECT COUNT(*) FROM appointments.appointments
+         WHERE doctor_id = $1 AND scheduled_date = $2::DATE
+           AND scheduled_start = $3::TIME
+           AND status NOT IN ('cancelled','no_show') AND is_deleted = FALSE`,
+        [data.doctorId, data.scheduledDate, data.scheduledStart],
+      );
+      if (Number(counts[0].count) >= maxPatients) {
+        throw new ConflictError(`Time slot ${data.scheduledStart} is fully booked.`);
+      }
+
+      const { rows } = await client.query<AppointmentRow>(
+        `INSERT INTO appointments.appointments
          (patient_id, doctor_id, appointment_type_id,
           scheduled_date, scheduled_start, scheduled_end,
           notes, is_walk_in, created_by)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
-      [
-        data.patientId, data.doctorId, data.appointmentTypeId,
-        data.scheduledDate, data.scheduledStart,
-        endTime,
-        data.notes ?? null,
-        data.isWalkIn ?? false,
-        createdBy,
-      ],
-    );
-    return rows[0];
+        [
+          data.patientId, data.doctorId, data.appointmentTypeId,
+          data.scheduledDate, data.scheduledStart,
+          endTime,
+          data.notes ?? null,
+          data.isWalkIn ?? false,
+          createdBy,
+        ],
+      );
+      return rows[0];
+    });
   }
 
   async updateStatus(
@@ -194,7 +197,7 @@ export class AppointmentsRepository {
     id: string, status: string,
     extra: Record<string, unknown> = {},
   ): Promise<QueueTokenRow | null> {
-    const sets  = [`status = $2`, `updated_at = NOW()`];
+    const sets  = [`status = $2`];
     const vals: unknown[] = [id, status];
     let   i = 3;
     for (const [k, v] of Object.entries(extra)) {

@@ -1,7 +1,9 @@
+import { getSession } from '@/lib/auth';
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 async function req<T>(method: string, path: string, body?: unknown, token?: string): Promise<T> {
-  const authToken = token ?? (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
+  const authToken = token ?? getSession()?.accessToken;
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: {
@@ -17,7 +19,7 @@ async function req<T>(method: string, path: string, body?: unknown, token?: stri
 
 export const telemedicineService = {
   createSession:    (data: unknown)             => req('POST', '/telemedicine', data),
-  joinSession:      (token: string)             => req('GET', `/telemedicine/join?token=${token}`),
+  joinSession:      (token: string)             => req('GET', `/telemedicine/join?token=${encodeURIComponent(token)}`),
   getSession:       (id: string)                => req('GET', `/telemedicine/${id}`),
   getDoctorSessions:(doctorId: string)          => req('GET', `/telemedicine/doctor/${doctorId}`),
   getChatHistory:   (id: string)                => req('GET', `/telemedicine/${id}/chat`),

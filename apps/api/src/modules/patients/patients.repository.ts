@@ -62,30 +62,36 @@ export class PatientsRepository {
     gender?: string, active?: boolean,
   ): Promise<{ rows: PatientRow[]; total: number }> {
     const like   = `%${q}%`;
-    const params: unknown[] = [like, limit, offset];
+    const filterParams: unknown[] = [like];
     let   where  = `(
       first_name ILIKE $1 OR last_name ILIKE $1 OR
       mrn        ILIKE $1 OR phone     ILIKE $1 OR
       first_name_native ILIKE $1 OR last_name_native ILIKE $1
     )`;
 
-    if (gender) { params.push(gender); where += ` AND gender = $${params.length}`; }
-    if (active !== undefined) { params.push(active); where += ` AND is_active = $${params.length}`; }
+    if (gender) {
+      filterParams.push(gender);
+      where += ` AND gender = $${filterParams.length}`;
+    }
+    if (active !== undefined) {
+      filterParams.push(active);
+      where += ` AND is_active = $${filterParams.length}`;
+    }
 
-    const countParams = params.filter((_, i) => i !== 1 && i !== 2);
-    const countWhere  = where.replace('$1', `$1`);
+    const limitParam  = filterParams.length + 1;
+    const offsetParam = filterParams.length + 2;
 
     const { rows } = await this.db.query<PatientRow>(
       `SELECT * FROM patients.patients
        WHERE is_deleted = FALSE AND ${where}
-       ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-      params,
+       ORDER BY created_at DESC LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      [...filterParams, limit, offset],
     );
 
     const countResult = await this.db.query<{ count: string }>(
       `SELECT COUNT(*) FROM patients.patients
-       WHERE is_deleted = FALSE AND ${countWhere}`,
-      countParams,
+       WHERE is_deleted = FALSE AND ${where}`,
+      filterParams,
     );
 
     return { rows, total: Number(countResult.rows[0]?.count ?? 0) };
@@ -218,13 +224,14 @@ export class PatientsRepository {
     return rows[0].id;
   }
 
-  async findLatestOtp(target: string, purpose: string) {
+  async findLatestOtp(target: string, purpose: string, patientId?: string) {
     const { rows } = await this.db.query(
       `SELECT * FROM patients.otp_codes
        WHERE target = $1 AND purpose = $2
+         AND ($3::UUID IS NULL OR patient_id = $3)
          AND used_at IS NULL AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`,
-      [target, purpose],
+      [target, purpose, patientId ?? null],
     );
     return rows[0] ?? null;
   }
@@ -253,6 +260,14 @@ export class PatientsRepository {
       [target],
     );
     return Number(rows[0].count);
+  }
+
+  async markContactVerified(patientId: string, type: 'phone' | 'email'): Promise<void> {
+    const column = type === 'email' ? 'email_verified_at' : 'phone_verified_at';
+    await this.db.query(
+      `UPDATE patients.patients SET ${column} = NOW() WHERE id = $1`,
+      [patientId],
+    );
   }
 
   // ── Family members ────────────────────────────────────────

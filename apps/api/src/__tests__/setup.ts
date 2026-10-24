@@ -1,5 +1,9 @@
 import { getDb } from '@/infrastructure/database/db.client';
 
+afterAll(async () => {
+  await getDb().end();
+});
+
 // Clean tables between tests in the right order
 export async function cleanDatabase() {
   const db = getDb();
@@ -34,12 +38,13 @@ export async function seedTestUser(role = 'super_admin') {
   const db   = getDb();
   const bcrypt = require('bcrypt');
   const hash = await bcrypt.hash('Test@123456', 10);
+  const username = role === 'super_admin' ? 'testuser' : `testuser_${role}`;
 
   const { rows: [user] } = await db.query(
     `INSERT INTO auth.users (username, email, password_hash, full_name, preferred_language)
-     VALUES ('testuser', 'test@test.com', $1, 'Test User', 'en')
+     VALUES ($1, $2, $3, 'Test User', 'en')
      RETURNING *`,
-    [hash],
+    [username, `${username}@test.com`, hash],
   );
 
   const { rows: [roleRow] } = await db.query(

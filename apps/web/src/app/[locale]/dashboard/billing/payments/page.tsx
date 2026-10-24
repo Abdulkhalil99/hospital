@@ -1,10 +1,18 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DashboardShell }      from '@/components/layout/DashboardShell';
 import { Badge }               from '@/components/layout/Badge';
 import { api }                 from '@/lib/api';
 import { useT }                from '@/lib/i18n';
 import { resolveNav, BILLING_NAV } from '@/lib/nav';
+
+async function loadPayableInvoices() {
+  const responses = await Promise.all([
+    api.get<any>('/billing?status=issued&limit=100'),
+    api.get<any>('/billing?status=partial&limit=100'),
+  ]);
+  return responses.flatMap(response => response.data ?? []);
+}
 
 export default function PaymentsPage({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
@@ -18,21 +26,36 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
   const [msg,      setMsg]      = useState('');
   const [loading,  setLoading]  = useState(false);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const selectionVersion = useRef(0);
 
   useEffect(() => {
-    api.get<any>('/billing?status=issued&limit=30')
-      .then(r => setInvoices(r.data ?? []));
+    loadPayableInvoices()
+      .then(setInvoices)
+      .catch((err: Error) => setMsg(`❌ ${err.message}`))
+      .finally(() => setListLoading(false));
   }, []);
 
   async function selectInvoice(id: string) {
-    const data = await api.get<any>(`/billing/${id}`);
-    setInvoice(data);
-    setAmount(String(data.invoice.balance_due));
+    if (loading) return;
+    const version = ++selectionVersion.current;
+    setInvoice(null);
     setMsg('');
+    try {
+      const data = await api.get<any>(`/billing/${id}`);
+      if (version !== selectionVersion.current) return;
+      setInvoice(data);
+      setAmount(String(data.invoice.balance_due));
+      setReference('');
+    } catch (err: any) {
+      if (version === selectionVersion.current) setMsg(`❌ ${err.message}`);
+    }
   }
 
   async function handlePayment(e: React.FormEvent) {
-    e.preventDefault(); setLoading(true); setMsg('');
+    e.preventDefault();
+    if (loading || !invoice) return;
+    setLoading(true); setMsg('');
     try {
       const res = await api.post<any>(`/billing/${invoice.invoice.id}/payments`, {
         amount: Number(amount), paymentMethod: method,
@@ -40,14 +63,19 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
       });
       setMsg(`✅ ${t('Payment recorded. Receipt: {{receipt}}', { receipt: res.receipt?.receipt_number ?? '—' })}`);
       setInvoice(null); setAmount(''); setReference('');
-      const updated = await api.get<any>('/billing?status=issued&limit=30');
-      setInvoices(updated.data ?? []);
+      setInvoices(current => current.filter(row => row.id !== invoice.invoice.id));
+      try {
+        setInvoices(await loadPayableInvoices());
+      } catch {
+        // Keep the confirmed receipt visible if refreshing the list fails.
+      }
     } catch (err: any) { setMsg(`❌ ${err.message}`); }
     setLoading(false);
   }
 
   return (
     <DashboardShell navItems={nav} title={t('nav.payments')} locale={locale}>
+      {msg && <div role="status" style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
         {/* Invoice list */}
@@ -57,6 +85,8 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Search patient name…')} />
           </div>
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', overflow: 'hidden' }}>
+            {listLoading && <div style={{ padding: 16 }}>{t('dash.loading')}</div>}
+            {!listLoading && invoices.length === 0 && <div style={{ padding: 16 }}>{t('dash.nodata')}</div>}
             {invoices.filter((inv: any) => !search || inv.patient_name?.toLowerCase().includes(search.toLowerCase())).map((inv: any) => (
               <div
                 key={inv.id}
@@ -102,7 +132,7 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
               <form onSubmit={handlePayment}>
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Amount *')}</label>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" step="0.01" />
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" max={Number(invoice.invoice.balance_due)} step="0.01" />
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('dash.method')}</label>
@@ -114,7 +144,6 @@ export default function PaymentsPage({ params: { locale } }: { params: { locale:
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Reference number')}</label>
                   <input value={reference} onChange={e => setReference(e.target.value)} placeholder={t('Card/transfer reference…')} />
                 </div>
-                {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
                 <button type="submit" disabled={loading} style={{ width: '100%' }}>
                   {loading ? t('Processing…') : `${t('Record payment')} — AFN ${Number(amount || 0).toLocaleString()}`}
                 </button>

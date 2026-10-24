@@ -24,6 +24,7 @@ export class PortalRepository {
   }
 
   async findPatientForPortalLink(data: {
+    patientId?: string;
     mrn: string;
     phone?: string;
     dateOfBirth?: string;
@@ -35,6 +36,11 @@ export class PortalRepository {
     ];
     const values: unknown[] = [data.mrn];
     let index = 2;
+
+    if (data.patientId) {
+      conditions.push(`id = $${index++}`);
+      values.push(data.patientId);
+    }
 
     if (data.phone) {
       conditions.push(`regexp_replace(phone, '\\D', '', 'g') = $${index++}`);
@@ -57,12 +63,32 @@ export class PortalRepository {
   }
 
   async linkPortalUser(patientId: string, userId: string) {
-    await this.db.query(
-      `UPDATE patients.patients
-       SET portal_user_id = $2, updated_at = NOW(), updated_by = $2
-       WHERE id = $1`,
-      [patientId, userId],
-    );
+    const client = await this.db.connect();
+    try {
+      await client.query('BEGIN');
+      // Serialize links for this account so concurrent requests cannot attach
+      // multiple patient records to one portal user.
+      await client.query('SELECT id FROM auth.users WHERE id = $1 FOR UPDATE', [userId]);
+      const { rows } = await client.query(
+        `UPDATE patients.patients
+         SET portal_user_id = $2, updated_at = NOW(), updated_by = $2
+         WHERE id = $1 AND is_deleted = FALSE AND is_active = TRUE
+           AND (portal_user_id IS NULL OR portal_user_id = $2)
+           AND NOT EXISTS (
+             SELECT 1 FROM patients.patients
+             WHERE portal_user_id = $2 AND id <> $1 AND is_deleted = FALSE
+           )
+         RETURNING *`,
+        [patientId, userId],
+      );
+      await client.query('COMMIT');
+      return rows[0] ?? null;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async getMyAppointments(patientId: string, upcoming = false) {

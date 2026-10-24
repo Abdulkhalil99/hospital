@@ -37,7 +37,7 @@ export const emrController = {
   }),
 
   completeEncounter: asyncHandler(async (req, res) => {
-    const enc = await svc.completeEncounter(req.params.id);
+    const enc = await svc.completeEncounter(req.params.id, req.user!.id);
     res.json({ success: true, data: enc });
   }),
 

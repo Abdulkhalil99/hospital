@@ -107,6 +107,28 @@ export class AuthRepository {
     return rows[0] ?? null;
   }
 
+  async rotateRefreshToken(tokenHash: string, replacementHash: string, expiresAt: Date) {
+    // Consume the original and persist its replacement atomically. Concurrent
+    // refresh requests cannot both issue tokens, and reuse revocation sees the
+    // replacement as soon as it sees the consumed original.
+    const { rows } = await this.db.query(
+      `WITH consumed AS (
+         UPDATE auth.refresh_tokens
+         SET revoked_at = NOW()
+         WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()
+         RETURNING *
+       ), replacement AS (
+         INSERT INTO auth.refresh_tokens (user_id, token_hash, expires_at)
+         SELECT user_id, $2, $3 FROM consumed
+         RETURNING user_id
+       )
+       SELECT consumed.* FROM consumed
+       JOIN replacement ON replacement.user_id = consumed.user_id`,
+      [tokenHash, replacementHash, expiresAt],
+    );
+    return rows[0] ?? null;
+  }
+
   async revokeRefreshToken(tokenHash: string): Promise<void> {
     await this.db.query(
       `UPDATE auth.refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1`,

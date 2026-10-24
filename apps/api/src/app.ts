@@ -7,33 +7,38 @@ import { config }     from '@/config';
 import { logger }     from '@/infrastructure/logger/logger';
 import { globalErrorHandler } from '@/shared/errors/error-handler';
 import { i18nMiddleware }     from '@/shared/middleware/i18n.middleware';
+import { authRouter } from './modules/auth/auth.router';
+import { patientsRouter } from './modules/patients/patients.router';
+import { doctorsRouter } from './modules/doctors/doctors.router';
+import { appointmentsRouter } from './modules/appointments/appointments.router';
+import { emrRouter } from './modules/emr/emr.router';
+import { pharmacyRouter } from './modules/pharmacy/pharmacy.router';
+import { laboratoryRouter } from './modules/laboratory/laboratory.router';
+import { emergencyRouter } from './modules/emergency/emergency.router';
+import { billingRouter } from './modules/billing/billing.router';
+import { notificationsRouter } from './modules/notifications/notifications.router';
+import { telemedicineRouter } from './modules/telemedicine/telemedicine.router';
+import { i18nRouter } from './modules/i18n/i18n.router';
+import { reportsRouter } from './modules/reports/reports.router';
+import { adminRouter } from './modules/admin/admin.router';
+import { portalRouter } from './modules/portal/portal.router';
 
-function safeRequire(modulePath: string) {
-  try {
-    const mod = require(modulePath);
-    return mod.default ?? mod[Object.keys(mod).find(k => k.endsWith('Router')) ?? ''] ?? null;
-  } catch (e) {
-    logger.warn(`Router not loaded: ${modulePath}`, { error: String(e) });
-    return null;
-  }
-}
-
-const ROUTERS: [string, string][] = [
-  ['/api/v1/auth',          './modules/auth/auth.router'],
-  ['/api/v1/patients',      './modules/patients/patients.router'],
-  ['/api/v1/doctors',       './modules/doctors/doctors.router'],
-  ['/api/v1/appointments',  './modules/appointments/appointments.router'],
-  ['/api/v1/emr',           './modules/emr/emr.router'],
-  ['/api/v1/pharmacy',      './modules/pharmacy/pharmacy.router'],
-  ['/api/v1/laboratory',    './modules/laboratory/laboratory.router'],
-  ['/api/v1/emergency',     './modules/emergency/emergency.router'],
-  ['/api/v1/billing',       './modules/billing/billing.router'],
-  ['/api/v1/notifications', './modules/notifications/notifications.router'],
-  ['/api/v1/telemedicine',  './modules/telemedicine/telemedicine.router'],
-  ['/api/v1/i18n',          './modules/i18n/i18n.router'],
-  ['/api/v1/reports',       './modules/reports/reports.router'],
-  ['/api/v1/admin',         './modules/admin/admin.router'],
-  ['/api/v1/portal',        './modules/portal/portal.router'],
+const ROUTERS: [string, express.Router][] = [
+  ['/api/v1/auth',          authRouter],
+  ['/api/v1/patients',      patientsRouter],
+  ['/api/v1/doctors',       doctorsRouter],
+  ['/api/v1/appointments',  appointmentsRouter],
+  ['/api/v1/emr',           emrRouter],
+  ['/api/v1/pharmacy',      pharmacyRouter],
+  ['/api/v1/laboratory',    laboratoryRouter],
+  ['/api/v1/emergency',     emergencyRouter],
+  ['/api/v1/billing',       billingRouter],
+  ['/api/v1/notifications', notificationsRouter],
+  ['/api/v1/telemedicine',  telemedicineRouter],
+  ['/api/v1/i18n',          i18nRouter],
+  ['/api/v1/reports',       reportsRouter],
+  ['/api/v1/admin',         adminRouter],
+  ['/api/v1/portal',        portalRouter],
 ];
 
 export function createApp(): express.Application {
@@ -130,12 +135,9 @@ export function createApp(): express.Application {
   });
 
   // ── Mount all routers ─────────────────────────────────────────
-  for (const [path, modulePath] of ROUTERS) {
-    const router = safeRequire(modulePath);
-    if (router) {
-      app.use(path, router);
-      logger.debug(`Mounted: ${path}`);
-    }
+  for (const [path, router] of ROUTERS) {
+    app.use(path, router);
+    logger.debug(`Mounted: ${path}`);
   }
 
   // ── 404 ──────────────────────────────────────────────────────

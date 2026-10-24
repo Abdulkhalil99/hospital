@@ -11,49 +11,20 @@ export function registerBillingHooks(): void {
 
   // Auto-create invoice when encounter completes
   eventBus.on(EVENTS.ENCOUNTER_COMPLETED, async (payload: unknown) => {
-    const { encounterId, patientId, doctorId } = payload as {
-      encounterId: string; patientId: string; doctorId: string;
+    const { encounterId, patientId, doctorId, completedBy } = payload as {
+      encounterId: string; patientId: string; doctorId: string; completedBy?: string;
     };
     try {
-      // Check invoice doesn't already exist for this encounter
-      const { rows } = await db.query(
-        `SELECT id FROM billing.invoices
-         WHERE encounter_id = $1 AND is_deleted = FALSE LIMIT 1`,
-        [encounterId],
-      );
-      if (rows.length > 0) return;
-
-      // Create invoice
-      const invoice = await repo.createInvoice(
-        { patientId, encounterId },
-        'system',
-      );
-
-      // Get doctor consultation fee
-      const { rows: drRows } = await db.query(
-        `SELECT d.consultation_fee, d.consultation_fee_currency,
-                u.full_name, at2.name AS appt_type
-         FROM doctors.doctors d
-         JOIN auth.users u ON u.id = d.user_id
-         LEFT JOIN appointments.appointments a ON a.encounter_id_ref = $1
-         LEFT JOIN appointments.appointment_types at2 ON at2.id = a.appointment_type_id
-         WHERE d.id = $2 LIMIT 1`,
-        [encounterId, doctorId],
-      );
-
-      const fee  = drRows[0]?.consultation_fee ?? 300;
-      const name = drRows[0]?.full_name ?? 'Doctor';
-
-      // Add consultation line item
-      await repo.addItem({
-        invoiceId:   invoice.id,
-        description: `Consultation — ${name}`,
-        quantity:    1,
-        unitPrice:   fee,
+      const result = await repo.createEncounterInvoice({
+        encounterId,
+        patientId,
+        doctorId,
+        createdBy: completedBy,
       });
+      if (!result.created) return;
 
       logger.info('Auto-invoice created on encounter completion', {
-        invoiceId:   invoice.id,
+        invoiceId:   result.invoiceId,
         encounterId,
         patientId,
       });

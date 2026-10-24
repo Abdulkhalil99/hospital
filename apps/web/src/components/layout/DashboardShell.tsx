@@ -38,6 +38,9 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
   }
 
   const sideW = collapsed ? 64 : 240;
+  const activePath = navItems
+    .filter(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    .sort((a, b) => b.path.length - a.path.length)[0]?.path;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f6fa', direction: rtl ? 'rtl' : 'ltr' }}>
@@ -67,10 +70,10 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
         {/* Nav */}
         <nav style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
           {navItems.map(item => {
-            const active = pathname === item.path || pathname.startsWith(item.path + '/');
+            const active = item.path === activePath;
             const itemLabel = t(item.label);
             return (
-              <button key={item.path} onClick={() => router.push(item.path)} title={collapsed ? itemLabel : undefined}
+              <button key={item.path} onClick={() => router.push(item.path)} title={collapsed ? itemLabel : undefined} aria-current={active ? 'page' : undefined}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%',
                   textAlign: rtl ? 'right' : 'left',

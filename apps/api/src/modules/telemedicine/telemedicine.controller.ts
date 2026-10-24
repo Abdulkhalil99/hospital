@@ -7,7 +7,7 @@ const svc = new TelemedicineService();
 export const telemedicineController = {
 
   createSession: asyncHandler(async (req, res) => {
-    const result = await svc.createSession(req.body, req.user!.id);
+    const result = await svc.createSession(req.body, req.user!);
     res.status(201).json({ success: true, data: result });
   }),
 
@@ -23,31 +23,30 @@ export const telemedicineController = {
   }),
 
   getSession: asyncHandler(async (req, res) => {
-    const session = await svc.getSession(req.params.id);
+    const session = await svc.getSession(req.params.id, req.user!);
     res.json({ success: true, data: session });
   }),
 
   getDoctorSessions: asyncHandler(async (req, res) => {
-    const data = await svc.getDoctorSessions(req.params.doctorId);
+    const data = await svc.getDoctorSessions(req.params.doctorId, req.user!);
     res.json({ success: true, data });
   }),
 
   getChatHistory: asyncHandler(async (req, res) => {
-    const data = await svc.getChatHistory(req.params.id);
+    const data = await svc.getChatHistory(req.params.id, req.user!);
     res.json({ success: true, data });
   }),
 
   sendChatMessage: asyncHandler(async (req, res) => {
-    const { message, messageType, role } = req.body;
+    const { message, messageType } = req.body;
     const saved = await svc.sendChatMessage(
-      req.params.id, req.user!.id,
-      role ?? 'doctor', message, messageType ?? 'text',
+      req.params.id, req.user!, message, messageType ?? 'text',
     );
     res.status(201).json({ success: true, data: saved });
   }),
 
   endSession: asyncHandler(async (req, res) => {
-    const updated = await svc.endSession(req.params.id, req.user!.id);
+    const updated = await svc.endSession(req.params.id, req.user!);
     res.json({ success: true, data: updated });
   }),
 };

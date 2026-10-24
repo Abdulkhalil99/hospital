@@ -1,17 +1,17 @@
 import { Pool } from 'pg';
+import { testDatabaseState } from './test-database';
 
 export default async function globalTeardown() {
-  const pool = new Pool({
-    connectionString: 'postgresql://medicore_user:medicore_pass@localhost:5433/postgres',
-  });
+  // Only a database successfully created by this run can be removed here.
+  const database = testDatabaseState.__medicoreTestDatabase;
+  if (!database) return;
+
+  const admin = new Pool({ connectionString: database.adminUrl });
   try {
-    await pool.query(`
-      SELECT pg_terminate_backend(pid) FROM pg_stat_activity
-      WHERE datname = 'medicore_test' AND pid <> pg_backend_pid()
-    `);
-    await pool.query(`DROP DATABASE IF EXISTS medicore_test`);
-    console.log('✅ Test database dropped');
+    await admin.query(`DROP DATABASE "${database.databaseName}" WITH (FORCE)`);
+    delete testDatabaseState.__medicoreTestDatabase;
+    console.log('✅ Isolated test database dropped');
   } finally {
-    await pool.end();
+    await admin.end();
   }
 }

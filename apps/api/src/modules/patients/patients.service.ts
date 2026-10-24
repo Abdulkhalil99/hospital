@@ -104,14 +104,30 @@ export class PatientsService {
   async verifyRegistrationOtp(
     patientId: string, target: string, code: string,
   ): Promise<void> {
-    await this.otp.verify(target, code, 'registration');
+    const patient = await this.getById(patientId);
+    const targetType = this.assertPatientContact(patient, target);
+    await this.otp.verify(target, code, 'registration', patientId);
+    await this.repo.markContactVerified(patientId, targetType);
     logger.info('Patient OTP verified', { patientId });
   }
 
   // ── Resend OTP ────────────────────────────────────────────
   async resendOtp(patientId: string, target: string, type: 'phone' | 'email') {
     const patient = await this.getById(patientId);
+    const actualType = this.assertPatientContact(patient, target);
+    if (actualType !== type) {
+      throw new ForbiddenError('Verification target type does not match the patient contact.');
+    }
     return this.otp.send(target, type, 'registration', patient.id);
+  }
+
+  private assertPatientContact(
+    patient: { phone: string; email: string | null },
+    target: string,
+  ): 'phone' | 'email' {
+    if (patient.phone === target) return 'phone';
+    if (patient.email === target) return 'email';
+    throw new ForbiddenError('Verification target does not belong to this patient.');
   }
 
   // ── Update profile ────────────────────────────────────────

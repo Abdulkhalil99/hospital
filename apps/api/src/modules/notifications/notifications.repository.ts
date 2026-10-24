@@ -42,10 +42,13 @@ export class NotificationsRepository {
   async claimPendingJobs(limit = 20): Promise<QueueRow[]> {
     const { rows } = await this.db.query<QueueRow>(
       `UPDATE notifications.notification_queue
-       SET status = 'processing'
+       SET status = 'processing', processed_at = NOW()
        WHERE id IN (
          SELECT id FROM notifications.notification_queue
-         WHERE status IN ('pending','failed')
+         WHERE (
+             status IN ('pending','failed')
+             OR (status = 'processing' AND processed_at < NOW() - INTERVAL '5 minutes')
+           )
            AND next_attempt_at <= NOW()
            AND attempts < max_attempts
          ORDER BY priority ASC, created_at ASC
@@ -61,16 +64,16 @@ export class NotificationsRepository {
   async markSent(
     id:                string,
     providerMessageId: string,
-  ): Promise<void> {
-    await this.db.query(
-      `UPDATE notifications.notification_queue
-       SET status = 'sent', sent_at = NOW(), processed_at = NOW(),
-           attempts = attempts + 1
-       WHERE id = $1`,
-      [id],
-    );
-    await this.db.query(
-      `INSERT INTO notifications.notification_log
+  ): Promise<{ id: string; created_at: string } | null> {
+    const { rows } = await this.db.query<{ id: string; created_at: string }>(
+      `WITH sent AS (
+         UPDATE notifications.notification_queue
+         SET status = 'sent', sent_at = NOW(), processed_at = NOW(),
+             attempts = attempts + 1
+         WHERE id = $1
+         RETURNING *
+       )
+       INSERT INTO notifications.notification_log
          (queue_id, user_id, recipient_phone, recipient_email,
           event_type, channel_code, locale_code,
           subject, body, status, provider_message_id, sent_at)
@@ -78,9 +81,11 @@ export class NotificationsRepository {
               event_type, channel_code, locale_code,
               rendered_subject, rendered_body,
               'sent', $2, NOW()
-       FROM notifications.notification_queue WHERE id = $1`,
+       FROM sent
+       RETURNING id, created_at`,
       [id, providerMessageId],
     );
+    return rows[0] ?? null;
   }
 
   async markFailed(id: string, error: string): Promise<void> {

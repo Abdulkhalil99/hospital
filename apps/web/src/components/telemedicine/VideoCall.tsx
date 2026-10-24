@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { io, Socket } from 'socket.io-client';
 import { useT } from '@/lib/i18n';
 
 interface Message {
@@ -33,7 +34,7 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
   const localVideoRef  = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerRef        = useRef<RTCPeerConnection | null>(null);
-  const socketRef      = useRef<WebSocket | null>(null);
+  const socketRef      = useRef<Socket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
   const [status,     setStatus]     = useState<'connecting' | 'waiting' | 'active' | 'ended'>('connecting');
@@ -49,8 +50,8 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
 
   // ── WebSocket setup ───────────────────────────────────────
   const sendWS = useCallback((event: string, data: unknown) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ event, data }));
+    if (socketRef.current?.connected) {
+      socketRef.current.emit(event, data);
     }
   }, []);
 
@@ -115,29 +116,30 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
 
   // ── Main WebSocket + event routing ───────────────────────
   useEffect(() => {
-    const ws = new WebSocket(`${WS_URL.replace('http', 'ws')}?token=${wsToken}`);
-    socketRef.current = ws;
+    const socket = io(WS_URL, {
+      auth: { token: wsToken },
+      transports: ['websocket'],
+      reconnection: true,
+    });
+    socketRef.current = socket;
 
-    ws.onopen = () => {
+    socket.on('connect', () => {
       sendWS('tele:join', { sessionId, role });
       setStatus('waiting');
-    };
+    });
 
-    ws.onmessage = async (msg) => {
-      const { event, data } = JSON.parse(msg.data);
+    socket.on('tele:session_started', () => {
+      if (role === 'doctor') void initiateCall();
+    });
 
-      if (event === 'tele:session_started') {
-        // Doctor initiates offer when session becomes active
-        if (role === 'doctor') initiateCall();
+    socket.on('tele:participant_joined', (data) => {
+      if (role === 'doctor' && data.role === 'patient') {
+        void initiateCall();
       }
+    });
 
-      if (event === 'tele:participant_joined') {
-        if (role === 'doctor' && data.role === 'patient') {
-          initiateCall();
-        }
-      }
-
-      if (event === 'tele:offer' && role === 'patient') {
+    socket.on('tele:offer', async (data) => {
+      if (role === 'patient') {
         const peer = createPeer();
         peerRef.current = peer;
 
@@ -150,42 +152,42 @@ export function VideoCall({ sessionId, wsToken, role, patientName, doctorName }:
 
         sendWS('tele:answer', { sessionId, fromRole: role, sdp: answer });
       }
+    });
 
-      if (event === 'tele:answer' && role === 'doctor') {
+    socket.on('tele:answer', async (data) => {
+      if (role === 'doctor') {
         await peerRef.current?.setRemoteDescription(new RTCSessionDescription(data.sdp));
       }
+    });
 
-      if (event === 'tele:ice_candidate') {
-        try {
-          await peerRef.current?.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } catch { /* ignore stale candidates */ }
-      }
+    socket.on('tele:ice_candidate', async (data) => {
+      try {
+        await peerRef.current?.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } catch { /* ignore stale candidates */ }
+    });
 
-      if (event === 'tele:chat') {
-        setMessages(prev => [...prev, data]);
-        if (!showChat) setUnread(prev => prev + 1);
-      }
+    socket.on('tele:chat', (data) => {
+      setMessages(prev => [...prev, data]);
+      setUnread(prev => prev + 1);
+    });
 
-      if (event === 'tele:call_ended') {
-        setStatus('ended');
-        localStreamRef.current?.getTracks().forEach(t => t.stop());
-      }
+    socket.on('tele:call_ended', () => {
+      setStatus('ended');
+      localStreamRef.current?.getTracks().forEach(t => t.stop());
+    });
 
-      if (event === 'tele:participant_left') {
-        setStatus('waiting');
-      }
-    };
+    socket.on('tele:participant_left', () => {
+      setStatus('waiting');
+    });
 
-    ws.onclose = () => {
-      if (status !== 'ended') setStatus('ended');
-    };
+    socket.on('connect_error', () => setStatus('ended'));
 
     return () => {
-      ws.close();
+      socket.disconnect();
       peerRef.current?.close();
       localStreamRef.current?.getTracks().forEach(t => t.stop());
     };
-  }, [wsToken, sessionId, role]);
+  }, [createPeer, initiateCall, role, sendWS, sessionId, startLocalMedia, wsToken]);
 
   // ── Controls ──────────────────────────────────────────────
   const toggleCam = () => {

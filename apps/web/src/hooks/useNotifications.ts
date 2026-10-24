@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface Notification {
   id:         string;
@@ -17,8 +18,7 @@ export function useNotifications(token: string, userId: string) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount,   setUnreadCount]   = useState(0);
   const [connected,     setConnected]     = useState(false);
-  const socketRef    = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -39,39 +39,34 @@ export function useNotifications(token: string, userId: string) {
   // WebSocket for real-time new notifications
   const connect = useCallback(() => {
     if (!token || !userId) return;
-    const ws = new WebSocket(`${WS_URL.replace('http', 'ws')}?token=${token}`);
+    const socket = io(WS_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+    });
 
-    ws.onopen = () => {
+    socket.on('connect', () => {
       setConnected(true);
-      // Join user-specific room for in-app notifications
-      ws.send(JSON.stringify({ event: 'join_room', data: { room: `user:${userId}` } }));
-    };
+      socket.emit('join_room', { room: `user:${userId}` });
+    });
 
-    ws.onmessage = (msg) => {
-      try {
-        const { event, data } = JSON.parse(msg.data);
-        if (event === 'notification:new') {
-          setNotifications(prev => [data, ...prev]);
-          setUnreadCount(prev => prev + 1);
-        }
-      } catch { /* ignore */ }
-    };
+    socket.on('notification:new', (data) => {
+      setNotifications(prev => [data, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
 
-    ws.onclose = () => {
+    socket.on('disconnect', () => {
       setConnected(false);
-      reconnectRef.current = setTimeout(connect, 4000);
-    };
-
-    ws.onerror = () => ws.close();
-    socketRef.current = ws;
+    });
+    socketRef.current = socket;
   }, [token, userId]);
 
   useEffect(() => {
     loadInitial();
     connect();
     return () => {
-      if (reconnectRef.current) clearTimeout(reconnectRef.current);
-      socketRef.current?.close();
+      socketRef.current?.disconnect();
+      socketRef.current = null;
     };
   }, [loadInitial, connect]);
 

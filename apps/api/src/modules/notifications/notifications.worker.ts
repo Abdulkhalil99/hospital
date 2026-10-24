@@ -40,11 +40,9 @@ async function processOne(job: {
 
       case 'inapp':
         if (!job.user_id) throw new Error('No user_id for in-app notification');
-        result = await sendInApp(
-          job.user_id,
-          job.rendered_subject,
-          body,
-        );
+        // Persist the inbox item first. The real-time event is emitted with the
+        // durable log id after markSent succeeds.
+        result = { success: true, providerMessageId: `inapp-${job.id}` };
         break;
 
       case 'push':
@@ -57,7 +55,13 @@ async function processOne(job: {
     }
 
     if (result.success) {
-      await repo.markSent(job.id, result.providerMessageId ?? 'ok');
+      const notification = await repo.markSent(job.id, result.providerMessageId ?? 'ok');
+      if (job.channel_code === 'inapp' && job.user_id && notification) {
+        await sendInApp(job.user_id, job.rendered_subject, body, {
+          notificationId: notification.id,
+          createdAt: notification.created_at,
+        });
+      }
     } else {
       await repo.markFailed(job.id, result.error ?? 'Delivery failed');
     }

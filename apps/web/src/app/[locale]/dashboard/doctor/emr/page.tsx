@@ -13,28 +13,22 @@ export default function DoctorEMR({ params: { locale } }: { params: { locale: st
   const nav    = resolveNav(DOCTOR_NAV, locale, t);
   const router = useRouter();
 
-  const [doctorId,   setDoctorId]   = useState('');
   const [encounters, setEncounters] = useState<any[]>([]);
   const [loading,    setLoading]    = useState(true);
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     api.get<any>('/doctors/me').then(doc => {
-      setDoctorId(doc.id);
       return api.get<any[]>(`/emr/doctor/${doc.id}?date=${today}`);
     }).then(enc => { setEncounters(enc ?? []); setLoading(false); })
     .catch(() => setLoading(false));
   }, []);
 
-  async function startEncounter(patientId: string) {
-    const enc = await api.post<any>('/emr', {
-      patientId, doctorId, encounterType: 'outpatient',
-    });
-    router.push(`/${locale}/dashboard/doctor/emr/${enc.id}`);
-  }
-
   return (
     <DashboardShell navItems={nav} title={t('nav.emr')} locale={locale}>
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => router.push(`/${locale}/dashboard/doctor/patients`)}>{t('emr.newEncounter')}</button>
+      </div>
       <DataTable
         keyField="id" loading={loading} rows={encounters} empty="No encounters today"
         columns={[

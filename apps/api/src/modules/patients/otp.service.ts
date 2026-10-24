@@ -3,6 +3,8 @@ import bcrypt   from 'bcrypt';
 import { PatientsRepository } from './patients.repository';
 import { ConflictError, ValidationError } from '@/shared/errors/app-error';
 import { logger } from '@/infrastructure/logger/logger';
+import { sendSms } from '@/modules/notifications/channels/sms.channel';
+import { sendEmail } from '@/modules/notifications/channels/email.channel';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_PER_DAY        = 5;
@@ -40,10 +42,14 @@ export class OtpService {
     const otpId   = await this.repo.saveOtp(target, type, hash, purpose, expiry, patientId);
 
     // In development, log the code — in production, send via SMS/email
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       logger.info(`OTP CODE (dev only): ${code}`, { target, purpose });
     } else {
-      await this.deliverOtp(target, type, code);
+      const delivered = await this.deliverOtp(target, type, code);
+      if (!delivered) {
+        await this.repo.markOtpUsed(otpId);
+        throw new ConflictError('Unable to deliver the verification code. Please try again later.');
+      }
     }
 
     logger.info('OTP sent', { target: target.replace(/./g, (c, i) => i < 3 ? c : '*'), purpose });
@@ -54,8 +60,9 @@ export class OtpService {
     target:  string,
     code:    string,
     purpose: string,
+    patientId?: string,
   ): Promise<boolean> {
-    const otpRecord = await this.repo.findLatestOtp(target, purpose);
+    const otpRecord = await this.repo.findLatestOtp(target, purpose, patientId);
 
     if (!otpRecord) {
       throw new ValidationError([{ message: 'No active OTP found. Please request a new one.' }]);
@@ -81,9 +88,17 @@ export class OtpService {
 
   private async deliverOtp(
     target: string, type: 'phone' | 'email', code: string,
-  ): Promise<void> {
-    // Hook into notification system — actual delivery implemented in Phase 11
-    logger.info('OTP delivery queued', { type, target: target.slice(0, 4) + '****' });
-    // TODO: eventBus.emit(EVENTS.OTP_REQUESTED, { target, type, code });
+  ): Promise<boolean> {
+    const result = type === 'phone'
+      ? await sendSms(target, `MediCore verification code: ${code}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`)
+      : await sendEmail(
+        target,
+        'MediCore verification code',
+        `Your MediCore verification code is ${code}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+      );
+    if (!result.success) {
+      logger.error('OTP delivery failed', { type, error: result.error });
+    }
+    return result.success;
   }
 }

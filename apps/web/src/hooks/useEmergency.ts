@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 interface EmergencyVisit {
   id:              string;
@@ -27,81 +28,63 @@ export function useEmergency(token: string) {
     visits: [], connected: false, lastAlert: null,
   });
 
-  const socketRef    = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const connect = useCallback(() => {
     if (!token) return;
 
-    const ws = new WebSocket(`${WS_URL.replace('http', 'ws')}?token=${token}`);
+    const socket = io(WS_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+    });
 
-    ws.onopen = () => {
+    socket.on('connect', () => {
       setState(s => ({ ...s, connected: true }));
-      // Subscribe to the emergency room
-      ws.send(JSON.stringify({ event: 'join_room', data: { room: 'emergency' } }));
-    };
+      socket.emit('join_room', { room: 'emergency' });
+    });
 
-    ws.onmessage = (msg) => {
-      try {
-        const { event, data } = JSON.parse(msg.data);
+    socket.on('emergency:board_updated', (data) => {
+      setState(s => ({ ...s, visits: data.board ?? [] }));
+    });
 
-        if (event === 'emergency:board_updated') {
-          setState(s => ({ ...s, visits: data.board ?? [] }));
-        }
+    socket.on('emergency:visit_registered', (data) => {
+      setState(s => ({ ...s, lastAlert: { type: 'visit_registered', data } }));
+    });
 
-        if (event === 'emergency:visit_registered') {
-          setState(s => ({
-            ...s,
-            lastAlert: { type: 'visit_registered', data },
-          }));
-        }
+    socket.on('emergency:critical_triage', (data) => {
+      setState(s => ({ ...s, lastAlert: { type: 'critical_triage', data } }));
+      if (typeof window !== 'undefined') {
+        const AudioContextClass = window.AudioContext
+          || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new AudioContextClass();
+        const osc = ctx.createOscillator();
+        osc.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    });
 
-        if (event === 'emergency:critical_triage') {
-          setState(s => ({
-            ...s,
-            lastAlert: { type: 'critical_triage', data },
-          }));
-          // Play alert sound in browser
-          if (typeof window !== 'undefined') {
-            const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            osc.connect(ctx.destination);
-            osc.frequency.value = 880;
-            osc.start();
-            osc.stop(ctx.currentTime + 0.3);
-          }
-        }
+    socket.on('emergency:trauma_activated', (data) => {
+      setState(s => ({ ...s, lastAlert: { type: 'trauma_activated', data } }));
+    });
 
-        if (event === 'emergency:trauma_activated') {
-          setState(s => ({
-            ...s,
-            lastAlert: { type: 'trauma_activated', data },
-          }));
-        }
+    socket.on('emergency:bed_assigned', (data) => {
+      setState(s => ({ ...s, lastAlert: { type: 'bed_assigned', data } }));
+    });
 
-        if (event === 'emergency:bed_assigned') {
-          setState(s => ({
-            ...s,
-            lastAlert: { type: 'bed_assigned', data },
-          }));
-        }
-      } catch { /* ignore parse errors */ }
-    };
-
-    ws.onclose = () => {
+    socket.on('disconnect', () => {
       setState(s => ({ ...s, connected: false }));
-      reconnectRef.current = setTimeout(connect, 3000);
-    };
-
-    ws.onerror = () => ws.close();
-    socketRef.current = ws;
+    });
+    socketRef.current = socket;
   }, [token]);
 
   useEffect(() => {
     connect();
     return () => {
-      if (reconnectRef.current) clearTimeout(reconnectRef.current);
-      socketRef.current?.close();
+      socketRef.current?.disconnect();
+      socketRef.current = null;
     };
   }, [connect]);
 

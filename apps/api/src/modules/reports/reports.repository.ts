@@ -36,12 +36,12 @@ export class ReportsRepository {
       ),
       this.db.query<{ pending: string; critical: string }>(
         `SELECT
-           COUNT(*) FILTER (WHERE status IN ('ordered','sample_collected')) AS pending,
-           COUNT(*) FILTER (WHERE acknowledged_at IS NULL) AS critical
-         FROM emr.lab_orders lo
-         LEFT JOIN laboratory.critical_value_alerts cva ON cva.ordering_doctor_id = (
-           SELECT doctor_id FROM emr.encounters WHERE id = lo.encounter_id LIMIT 1
-         )`,
+           (SELECT COUNT(*)
+              FROM emr.lab_orders
+             WHERE status IN ('ordered','sample_collected')) AS pending,
+           (SELECT COUNT(*)
+              FROM laboratory.critical_value_alerts
+             WHERE acknowledged_at IS NULL) AS critical`,
       ),
     ]);
 
@@ -63,9 +63,10 @@ export class ReportsRepository {
          COUNT(*)                AS transactions
        FROM billing.payments
        WHERE is_refunded = FALSE
-         AND received_at >= NOW() - INTERVAL '${days} days'
+         AND received_at >= NOW() - ($1 * INTERVAL '1 day')
        GROUP BY DATE(received_at)
        ORDER BY date ASC`,
+      [days],
     );
     return rows.map(r => ({
       date:         r.date,
@@ -81,9 +82,10 @@ export class ReportsRepository {
          COUNT(*)         AS count
        FROM patients.patients
        WHERE is_deleted = FALSE
-         AND created_at >= NOW() - INTERVAL '${days} days'
+         AND created_at >= NOW() - ($1 * INTERVAL '1 day')
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
+      [days],
     );
     return rows.map(r => ({ date: r.date, count: Number(r.count) }));
   }
@@ -104,21 +106,31 @@ export class ReportsRepository {
       `SELECT
          u.full_name,
          s.name AS specialty,
-         COUNT(a.id) AS appointments,
-         COUNT(a.id) FILTER (WHERE a.status = 'completed') AS completed,
-         COALESCE(SUM(p.amount), 0) AS revenue
+         COALESCE(appt.appointments, 0) AS appointments,
+         COALESCE(appt.completed, 0) AS completed,
+         COALESCE(rev.revenue, 0) AS revenue
        FROM doctors.doctors d
        JOIN auth.users u ON u.id = d.user_id
        LEFT JOIN doctors.specialties s ON s.id = d.specialty_id
-       LEFT JOIN appointments.appointments a ON a.doctor_id = d.id
-         AND a.scheduled_date >= NOW() - INTERVAL '30 days'
-       LEFT JOIN billing.payments p ON p.invoice_id IN (
-         SELECT id FROM billing.invoices WHERE encounter_id IN (
-           SELECT id FROM emr.encounters WHERE doctor_id = d.id
-         )
-       )
-       GROUP BY d.id, u.full_name, s.name
-       ORDER BY appointments DESC
+       LEFT JOIN LATERAL (
+         SELECT
+           COUNT(*) AS appointments,
+           COUNT(*) FILTER (WHERE a.status = 'completed') AS completed
+         FROM appointments.appointments a
+         WHERE a.doctor_id = d.id
+           AND a.is_deleted = FALSE
+           AND a.scheduled_date >= CURRENT_DATE - 30
+       ) appt ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(p.amount), 0) AS revenue
+         FROM emr.encounters e
+         JOIN billing.invoices i ON i.encounter_id = e.id AND i.is_deleted = FALSE
+         JOIN billing.payments p ON p.invoice_id = i.id AND p.is_refunded = FALSE
+         WHERE e.doctor_id = d.id
+           AND p.received_at >= NOW() - INTERVAL '30 days'
+       ) rev ON TRUE
+       WHERE d.is_deleted = FALSE
+       ORDER BY appointments DESC, u.full_name ASC
        LIMIT $1`,
       [limit],
     );
@@ -127,22 +139,26 @@ export class ReportsRepository {
 
   async getLabTurnaround() {
     const { rows } = await this.db.query(
-      `SELECT
+      `WITH sample_turnaround AS (
+         SELECT
+           ls.id AS sample_id,
+           ls.lab_test_id,
+           EXTRACT(EPOCH FROM (MIN(lr.entered_at) - ls.collected_at)) / 3600 AS hours
+         FROM laboratory.lab_samples ls
+         JOIN laboratory.lab_results lr ON lr.sample_id = ls.id
+         WHERE ls.status = 'resulted'
+           AND ls.created_at >= NOW() - INTERVAL '30 days'
+           AND ls.collected_at IS NOT NULL
+         GROUP BY ls.id, ls.lab_test_id, ls.collected_at
+       )
+       SELECT
          lt.name AS test_name,
          lt.category,
-         COUNT(ls.id) AS total_samples,
-         ROUND(AVG(
-           EXTRACT(EPOCH FROM (
-             MIN(lr.entered_at) - ls.collected_at
-           )) / 3600
-         ), 1) AS avg_hours
+         COUNT(st.sample_id) AS total_samples,
+         ROUND(AVG(st.hours)::NUMERIC, 1) AS avg_hours
        FROM laboratory.lab_tests lt
-       LEFT JOIN laboratory.lab_samples ls ON ls.lab_test_id = lt.id
-         AND ls.status = 'resulted'
-         AND ls.created_at >= NOW() - INTERVAL '30 days'
-       LEFT JOIN laboratory.lab_results lr ON lr.sample_id = ls.id
+       JOIN sample_turnaround st ON st.lab_test_id = lt.id
        GROUP BY lt.id, lt.name, lt.category
-       HAVING COUNT(ls.id) > 0
        ORDER BY avg_hours ASC`,
     );
     return rows;

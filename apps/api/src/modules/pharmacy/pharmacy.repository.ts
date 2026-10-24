@@ -1,6 +1,16 @@
 import { Pool } from 'pg';
-import { getDb } from '@/infrastructure/database/db.client';
+import { getDb, withTransaction } from '@/infrastructure/database/db.client';
 import { AddStockInput, DrugRow, InventoryRow, DispensingRow } from './pharmacy.types';
+
+export type DispenseTransactionResult =
+  | { ok: true; record: DispensingRow; before: number; after: number }
+  | {
+      ok: false;
+      reason: 'prescription_missing' | 'prescription_not_pending' |
+        'inventory_missing' | 'inventory_drug_mismatch' | 'insufficient_stock';
+      status?: string;
+      available?: number;
+    };
 
 export class PharmacyRepository {
   private db: Pool = getDb();
@@ -176,6 +186,119 @@ export class PharmacyRepository {
       ],
     );
     return rows[0];
+  }
+
+  /**
+   * Commits the stock deduction, movement audit, dispensing record, and
+   * prescription transition as one operation. The inventory row is locked
+   * before the dispensing insert; the database trigger performs the single
+   * stock decrement.
+   */
+  async dispenseAtomically(data: {
+    prescriptionId:     string;
+    drugId:              string;
+    inventoryId:         string;
+    quantityDispensed:   number;
+    dispensedBy:         string;
+    interactionsFound:   unknown;
+    witnessId:           string | null;
+    notes:               string | null;
+  }): Promise<DispenseTransactionResult> {
+    return withTransaction(async (client) => {
+      const { rows: prescriptions } = await client.query<{
+        id: string; patient_id: string; status: string;
+      }>(
+        `SELECT id, patient_id, status
+         FROM emr.prescriptions
+         WHERE id = $1
+         FOR UPDATE`,
+        [data.prescriptionId],
+      );
+      const prescription = prescriptions[0];
+      if (!prescription) return { ok: false, reason: 'prescription_missing' };
+      if (prescription.status !== 'pending') {
+        return {
+          ok: false,
+          reason: 'prescription_not_pending',
+          status: prescription.status,
+        };
+      }
+
+      const { rows: inventories } = await client.query<{
+        id: string; drug_id: string; quantity_on_hand: number;
+      }>(
+        `SELECT id, drug_id, quantity_on_hand
+         FROM pharmacy.drug_inventory
+         WHERE id = $1
+         FOR UPDATE`,
+        [data.inventoryId],
+      );
+      const inventory = inventories[0];
+      if (!inventory) return { ok: false, reason: 'inventory_missing' };
+      if (inventory.drug_id !== data.drugId) {
+        return { ok: false, reason: 'inventory_drug_mismatch' };
+      }
+
+      const before = Number(inventory.quantity_on_hand);
+      if (before < data.quantityDispensed) {
+        return { ok: false, reason: 'insufficient_stock', available: before };
+      }
+
+      const { rows: records } = await client.query<DispensingRow>(
+        `INSERT INTO pharmacy.dispensing_records
+           (prescription_id, patient_id, drug_id, inventory_id,
+            quantity_dispensed, dispensed_by, allergy_checked,
+            interaction_checked, interactions_found, witness_id, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,TRUE,TRUE,$7,$8,$9)
+         RETURNING *`,
+        [
+          data.prescriptionId,
+          prescription.patient_id,
+          data.drugId,
+          data.inventoryId,
+          data.quantityDispensed,
+          data.dispensedBy,
+          data.interactionsFound ? JSON.stringify(data.interactionsFound) : null,
+          data.witnessId,
+          data.notes,
+        ],
+      );
+
+      // after_dispense_reduce_stock runs inside this same transaction.
+      const { rows: updatedInventory } = await client.query<{ quantity_on_hand: number }>(
+        `SELECT quantity_on_hand
+         FROM pharmacy.drug_inventory
+         WHERE id = $1`,
+        [data.inventoryId],
+      );
+      const after = Number(updatedInventory[0].quantity_on_hand);
+
+      await client.query(
+        `INSERT INTO pharmacy.stock_movements
+           (drug_id, inventory_id, movement_type, quantity,
+            quantity_before, quantity_after, reference_id, notes, created_by)
+         VALUES ($1,$2,'dispensed',$3,$4,$5,$6,$7,$8)`,
+        [
+          data.drugId,
+          data.inventoryId,
+          -data.quantityDispensed,
+          before,
+          after,
+          data.prescriptionId,
+          data.notes,
+          data.dispensedBy,
+        ],
+      );
+
+      await client.query(
+        `UPDATE emr.prescriptions
+         SET status = 'dispensed', dispensed_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [data.prescriptionId],
+      );
+
+      return { ok: true, record: records[0], before, after };
+    });
   }
 
   async getDispensingHistory(patientId: string, limit = 20) {

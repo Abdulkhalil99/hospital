@@ -35,7 +35,9 @@ export class TelemedicineRepository {
       `SELECT s.*,
               p.first_name || ' ' || p.last_name AS patient_name,
               p.mrn AS patient_mrn,
-              u.full_name AS doctor_name
+              u.full_name AS doctor_name,
+              d.user_id AS doctor_user_id,
+              p.portal_user_id AS patient_user_id
        FROM telemedicine.sessions s
        JOIN patients.patients p ON p.id = s.patient_id
        JOIN doctors.doctors   d ON d.id = s.doctor_id
@@ -54,6 +56,8 @@ export class TelemedicineRepository {
               p.first_name || ' ' || p.last_name AS patient_name,
               p.mrn AS patient_mrn,
               u.full_name AS doctor_name,
+              d.user_id AS doctor_user_id,
+              p.portal_user_id AS patient_user_id,
               CASE
                 WHEN s.doctor_token  = $1 THEN 'doctor'
                 WHEN s.patient_token = $1 THEN 'patient'
@@ -81,6 +85,14 @@ export class TelemedicineRepository {
       [doctorId],
     );
     return rows;
+  }
+
+  async getDoctorUserId(doctorId: string): Promise<string | null> {
+    const { rows } = await this.db.query<{ user_id: string }>(
+      'SELECT user_id FROM doctors.doctors WHERE id = $1 AND is_deleted = FALSE',
+      [doctorId],
+    );
+    return rows[0]?.user_id ?? null;
   }
 
   async updateSessionStatus(
@@ -125,7 +137,7 @@ export class TelemedicineRepository {
   // ── Chat ──────────────────────────────────────────────────
   async saveMessage(
     sessionId:   string,
-    senderId:    string,
+    senderId:    string | null,
     senderRole:  string,
     message:     string,
     messageType: string,
@@ -144,7 +156,7 @@ export class TelemedicineRepository {
     const { rows } = await this.db.query<ChatMessageRow>(
       `SELECT cm.*, u.full_name AS sender_name
        FROM telemedicine.chat_messages cm
-       JOIN auth.users u ON u.id = cm.sender_id
+       LEFT JOIN auth.users u ON u.id = cm.sender_id
        WHERE cm.session_id = $1 AND cm.is_deleted = FALSE
        ORDER BY cm.created_at ASC`,
       [sessionId],

@@ -197,22 +197,27 @@ export class LaboratoryRepository {
     return rows[0];
   }
 
-  async validateResults(resultIds: string[], validatedBy: string): Promise<void> {
-    await this.db.query(
+  async validateResults(resultIds: string[], validatedBy: string): Promise<string[]> {
+    const { rows } = await this.db.query<{ id: string }>(
       `UPDATE laboratory.lab_results
        SET validated_by = $2, validated_at = NOW()
-       WHERE id = ANY($1::uuid[]) AND validated_at IS NULL`,
+       WHERE id = ANY($1::uuid[]) AND validated_at IS NULL
+       RETURNING id`,
       [resultIds, validatedBy],
     );
+    return rows.map(row => row.id);
   }
 
-  async releaseResults(resultIds: string[], releasedBy: string): Promise<void> {
-    await this.db.query(
+  async releaseResults(resultIds: string[], releasedBy: string): Promise<string[]> {
+    const { rows } = await this.db.query<{ id: string }>(
       `UPDATE laboratory.lab_results
        SET released_at = NOW(), released_by = $2
-       WHERE id = ANY($1::uuid[]) AND released_at IS NULL`,
+       WHERE id = ANY($1::uuid[]) AND released_at IS NULL
+         AND validated_at IS NOT NULL
+       RETURNING id`,
       [resultIds, releasedBy],
     );
+    return rows.map(row => row.id);
   }
 
   async getResultsBySample(sampleId: string): Promise<ResultRow[]> {

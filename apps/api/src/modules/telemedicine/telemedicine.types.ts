@@ -22,12 +22,14 @@ export interface SessionRow {
   patient_name?:    string;
   patient_mrn?:     string;
   doctor_name?:     string;
+  doctor_user_id?:  string;
+  patient_user_id?: string | null;
 }
 
 export interface ChatMessageRow {
   id:           string;
   session_id:   string;
-  sender_id:    string;
+  sender_id:    string | null;
   sender_role:  string;
   message:      string;
   message_type: string;

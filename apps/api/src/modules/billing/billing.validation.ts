@@ -7,7 +7,6 @@ export const createInvoiceSchema = z.object({
 });
 
 export const addItemSchema = z.object({
-  invoiceId:       z.string().uuid(),
   description:     z.string().min(1).max(300),
   descriptionFa:   z.string().max(300).optional(),
   quantity:        z.number().min(0.01),
@@ -21,7 +20,6 @@ export const addItemSchema = z.object({
 });
 
 export const recordPaymentSchema = z.object({
-  invoiceId:       z.string().uuid(),
   amount:          z.number().min(0.01),
   paymentMethod:   z.enum(['cash','card','bank_transfer','insurance','mobile_pay','other']),
   referenceNumber: z.string().max(100).optional(),
@@ -29,7 +27,6 @@ export const recordPaymentSchema = z.object({
 });
 
 export const applyDiscountSchema = z.object({
-  invoiceId:    z.string().uuid(),
   discountType: z.enum(['percentage','fixed','full_waiver']),
   amount:       z.number().min(0).optional(),
   percentage:   z.number().min(0).max(100).optional(),
@@ -37,7 +34,6 @@ export const applyDiscountSchema = z.object({
 });
 
 export const insuranceClaimSchema = z.object({
-  invoiceId:        z.string().uuid(),
   insuranceCompany: z.string().min(1).max(200),
   policyNumber:     z.string().min(1).max(100),
   claimAmount:      z.number().min(0.01),

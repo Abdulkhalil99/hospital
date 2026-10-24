@@ -10,6 +10,12 @@ export function authorize(...requiredPermissions: string[]) {
       next(); return;
     }
 
+    // Patient accounts use /portal endpoints, which resolve the linked patient
+    // from the authenticated user instead of accepting arbitrary record IDs.
+    if (req.user.roles.length > 0 && req.user.roles.every(role => role === 'patient')) {
+      throw new ForbiddenError('Use the patient portal to access your own records');
+    }
+
     // Check if user has ALL required permissions
     const missing = requiredPermissions.filter(
       p => !req.user!.permissions.includes(p),

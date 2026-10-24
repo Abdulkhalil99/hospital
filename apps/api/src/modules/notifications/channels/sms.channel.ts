@@ -1,9 +1,6 @@
 import { logger } from '@/infrastructure/logger/logger';
 import { DeliveryResult } from '../notifications.types';
 
-// In production: replace this with Twilio, local SMS gateway, or KaveNegar
-// npm install twilio   ← then uncomment the Twilio block below
-
 export async function sendSms(
   phone:   string,
   message: string,
@@ -17,32 +14,35 @@ export async function sendSms(
     return { success: true, providerMessageId: `dev-${Date.now()}` };
   }
 
-  // ── Twilio (uncomment for production) ─────────────────────
-  // const twilio = require('twilio')(
-  //   process.env.TWILIO_ACCOUNT_SID,
-  //   process.env.TWILIO_AUTH_TOKEN,
-  // );
-  // try {
-  //   const msg = await twilio.messages.create({
-  //     body: message,
-  //     from: process.env.TWILIO_PHONE_NUMBER,
-  //     to:   phone,
-  //   });
-  //   return { success: true, providerMessageId: msg.sid };
-  // } catch (err: unknown) {
-  //   const message = err instanceof Error ? err.message : String(err);
-  //   return { success: false, error: message };
-  // }
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_PHONE_NUMBER;
 
-  // ── Placeholder for any HTTP SMS provider ─────────────────
-  // const res = await fetch('https://your-sms-api.com/send', {
-  //   method: 'POST',
-  //   headers: { Authorization: `Bearer ${process.env.SMS_API_KEY}`, 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ to: phone, text: message }),
-  // });
-  // const data = await res.json();
-  // return { success: res.ok, providerMessageId: data.messageId, error: data.error };
+  if (!accountSid || !authToken || !from) {
+    return { success: false, error: 'Twilio SMS provider not configured' };
+  }
 
-  logger.warn('SMS channel not configured — message not sent', { to: phone });
-  return { success: false, error: 'SMS provider not configured' };
+  try {
+    const payload = new URLSearchParams({ To: phone, From: from, Body: message });
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: payload,
+      },
+    );
+    const result = await response.json() as { sid?: string; message?: string };
+    if (!response.ok || !result.sid) {
+      return { success: false, error: result.message ?? `Twilio returned HTTP ${response.status}` };
+    }
+    return { success: true, providerMessageId: result.sid };
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : String(err);
+    logger.error('SMS delivery failed', { to: phone, error });
+    return { success: false, error };
+  }
 }
