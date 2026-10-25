@@ -1,7 +1,48 @@
-import { getDb } from '@/infrastructure/database/db.client';
+import { getDb, withTransaction } from '@/infrastructure/database/db.client';
+import { timingSafeEqual } from 'crypto';
+import { z } from 'zod';
+import { verifiedLinkPatientSchema } from './portal.validation';
+import { portalCodeDigest } from './portal-link';
+import { hospitalClock } from '@/shared/utils/hospital-clock';
 
 export class PortalRepository {
   private db = getDb();
+
+  async verifyAndLinkPortalUser(userId: string, data: z.infer<typeof verifiedLinkPatientSchema>) {
+    return withTransaction(async client => {
+      // Account and challenge locks serialize attempts, consumption and ownership changes.
+      await client.query('SELECT id FROM auth.users WHERE id=$1 FOR UPDATE', [userId]);
+      const { rows: [challenge] } = await client.query(
+        'SELECT * FROM patients.portal_link_challenges WHERE id=$1 AND user_id=$2 FOR UPDATE',
+        [data.challengeId, userId],
+      );
+      if (!challenge || challenge.used_at || challenge.attempts >= 5 || new Date(challenge.expires_at) <= new Date()) {
+        return { status: 'invalid' as const };
+      }
+      await client.query('UPDATE patients.portal_link_challenges SET attempts=attempts+1 WHERE id=$1', [challenge.id]);
+      const expected = Buffer.from(challenge.code_hash, 'hex');
+      const supplied = Buffer.from(portalCodeDigest(data.challengeId, data.code), 'hex');
+      if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) return { status: 'invalid' as const };
+
+      const { rows: [patient] } = await client.query(
+        `SELECT * FROM patients.patients WHERE id=$1 AND mrn=$2 AND is_active AND NOT is_deleted
+          AND ($3::uuid IS NULL OR id=$3)
+          AND ($4::text IS NULL OR regexp_replace(phone, '\\D', '', 'g')=$4)
+          AND ($5::date IS NULL OR date_of_birth=$5) FOR UPDATE`,
+        [challenge.patient_id, data.mrn, data.patientId ?? null, data.phone?.replace(/\D/g, '') ?? null, data.dateOfBirth ?? null],
+      );
+      if (!patient) return { status: 'invalid' as const };
+      const { rows: [linked] } = await client.query(
+        `UPDATE patients.patients SET portal_user_id=$2,updated_by=$2,updated_at=NOW()
+         WHERE id=$1 AND (portal_user_id IS NULL OR portal_user_id=$2)
+           AND NOT EXISTS(SELECT 1 FROM patients.patients WHERE portal_user_id=$2 AND id<>$1 AND NOT is_deleted)
+         RETURNING *`, [patient.id, userId],
+      );
+      if (!linked) return { status: 'conflict' as const };
+      await client.query('UPDATE patients.portal_link_challenges SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL', [userId]);
+      return { status: 'linked' as const, patient: linked };
+    });
+  }
 
   async getPatientById(patientId: string) {
     const { rows } = await this.db.query(
@@ -17,7 +58,7 @@ export class PortalRepository {
   async getPatientByUserId(userId: string) {
     const { rows } = await this.db.query(
       `SELECT * FROM patients.patients
-       WHERE portal_user_id = $1 AND is_deleted = FALSE LIMIT 1`,
+       WHERE portal_user_id = $1 AND is_deleted = FALSE AND is_active = TRUE LIMIT 1`,
       [userId],
     );
     return rows[0] ?? null;
@@ -93,7 +134,7 @@ export class PortalRepository {
 
   async getMyAppointments(patientId: string, upcoming = false) {
     const where = upcoming
-      ? `AND a.scheduled_date >= CURRENT_DATE AND a.status IN ('scheduled','confirmed')`
+      ? `AND a.scheduled_date >= $2::date AND a.status IN ('scheduled','confirmed','checked_in','in_progress')`
       : '';
     const { rows } = await this.db.query(
       `SELECT a.*,
@@ -110,7 +151,7 @@ export class PortalRepository {
          ${where}
        ORDER BY a.scheduled_date DESC, a.scheduled_start DESC
        LIMIT 50`,
-      [patientId],
+      upcoming ? [patientId, hospitalClock().date] : [patientId],
     );
     return rows;
   }

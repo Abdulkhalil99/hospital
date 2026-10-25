@@ -82,7 +82,7 @@ export function registerSignalingHandlers(io: SocketServer): void {
     on('tele:chat', sessionPayload.merge(sendMessageSchema), async ({ sessionId, message, messageType }) => {
       const { role, senderId } = await authorizedSession(sessionId);
       if (!message.trim()) throw new Error('Message cannot be empty');
-      const saved = await repo.saveMessage(sessionId, senderId, role, message, messageType);
+      const saved = await repo.saveMessage(sessionId, senderId, role, message, messageType ?? 'text');
       io.to(roomName(sessionId)).emit('tele:chat', {
         id: saved.id, message: saved.message, messageType: saved.message_type,
         fromRole: role, senderId, timestamp: saved.created_at,

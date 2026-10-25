@@ -9,6 +9,7 @@ import {
 } from '@/shared/utils/jwt.util';
 import { UnauthorizedError } from '@/shared/errors/app-error';
 import { logger } from '@/infrastructure/logger/logger';
+import { MfaService } from './mfa.service';
 
 const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 30;
@@ -55,6 +56,8 @@ export class AuthService {
 
       throw new UnauthorizedError('Invalid credentials');
     }
+
+    if (user.mfa_enabled) await new MfaService().verifyLogin(user.id, input.mfaCode);
 
     const [roles, permissions] = await Promise.all([
       this.repo.getUserRoles(user.id),
@@ -152,6 +155,7 @@ export class AuthService {
       fullName:           user.full_name,
       preferredLanguage:  user.preferred_language,
       mustChangePassword: user.must_change_password,
+      mfaEnabled:         Boolean(user.mfa_enabled),
       roles:              roles.map((r: any) => r.name),
       permissions:        permissions.map((p: any) => p.code),
     };
@@ -161,12 +165,14 @@ export class AuthService {
     userId:          string,
     currentPassword: string,
     newPassword:     string,
+    mfaCode?:        string,
   ): Promise<void> {
     const user = await this.repo.findUserById(userId);
     if (!user) throw new UnauthorizedError();
 
     const valid = await bcrypt.compare(currentPassword, user.password_hash);
     if (!valid) throw new UnauthorizedError('Current password is incorrect');
+    if (user.mfa_enabled) await new MfaService().verifyLogin(userId, mfaCode);
 
     const newHash = await bcrypt.hash(newPassword, 12);
     await this.repo.updatePassword(userId, newHash);

@@ -32,8 +32,8 @@ export const authController = {
   }),
 
   changePassword: asyncHandler(async (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    await service.changePassword(req.user!.id, currentPassword, newPassword);
+    const { currentPassword, newPassword, mfaCode } = req.body;
+    await service.changePassword(req.user!.id, currentPassword, newPassword, mfaCode);
     res.json({ success: true, data: { message: 'Password changed. Please log in again.' } });
   }),
 };

@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   username: z.string().min(3).max(50),
   password: z.string().min(8).max(100),
+  mfaCode: z.string().trim().min(6).max(80).optional(),
 });
 
 export const refreshSchema = z.object({
@@ -10,6 +11,7 @@ export const refreshSchema = z.object({
 });
 
 export const changePasswordSchema = z.object({
+  mfaCode: z.string().trim().min(6).max(80).optional(),
   currentPassword: z.string().min(8),
   newPassword: z.string()
     .min(8, 'Minimum 8 characters')
@@ -22,3 +24,6 @@ export const changePasswordSchema = z.object({
   message: 'Passwords do not match',
   path:    ['confirmPassword'],
 });
+
+export const mfaEnrollmentSchema = z.object({ currentPassword: z.string().min(8).max(100) });
+export const mfaCredentialSchema = mfaEnrollmentSchema.extend({ code: z.string().trim().min(6).max(80) });

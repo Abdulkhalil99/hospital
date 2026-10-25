@@ -174,7 +174,7 @@ export class DoctorsRepository {
   }
 
   async getScheduleForDate(doctorId: string, date: Date) {
-    const dayOfWeek = date.getDay();
+    const dayOfWeek = date.getUTCDay();
     const dateStr   = date.toISOString().split('T')[0];
 
     const { rows } = await this.db.query(

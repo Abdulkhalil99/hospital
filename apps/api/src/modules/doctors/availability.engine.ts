@@ -1,6 +1,8 @@
 import { getDb } from '@/infrastructure/database/db.client';
 import { DoctorsRepository } from './doctors.repository';
 import { TimeSlot, AvailabilityResult } from './doctors.types';
+import { hospitalClock, isCalendarDate } from '@/shared/utils/hospital-clock';
+import { ValidationError } from '@/shared/errors/app-error';
 
 export class AvailabilityEngine {
   private repo = new DoctorsRepository();
@@ -18,7 +20,8 @@ export class AvailabilityEngine {
     const startMins = sh * 60 + sm;
     const endMins   = eh * 60 + em;
 
-    for (let min = startMins; min < endMins; min += slotDuration) {
+    if (slotDuration <= 0) return [];
+    for (let min = startMins; min + slotDuration <= endMins; min += slotDuration) {
       const h = Math.floor(min / 60).toString().padStart(2, '0');
       const m = (min % 60).toString().padStart(2, '0');
       slots.push(`${h}:${m}`);
@@ -41,6 +44,7 @@ export class AvailabilityEngine {
 
   // Core method — computes full availability for one doctor on one date
   async getForDate(doctorId: string, dateStr: string): Promise<AvailabilityResult> {
+    if (!isCalendarDate(dateStr)) throw new ValidationError([{ message: 'Choose a valid calendar date.' }]);
     const date = new Date(dateStr);
 
     // 1. Check if it is a public holiday
@@ -72,9 +76,9 @@ export class AvailabilityEngine {
     const bookingCounts = await this.repo.getBookingCounts(doctorId, dateStr);
 
     // 6. Build the availability array
-    const now       = new Date();
-    const isToday   = dateStr === now.toISOString().split('T')[0];
-    const nowMins   = now.getHours() * 60 + now.getMinutes();
+    const now       = hospitalClock();
+    const isToday   = dateStr === now.date;
+    const nowMins   = now.minutes;
 
     const slots: TimeSlot[] = slotTimes.map((startTime, i) => {
       const [sh, sm]   = startTime.split(':').map(Number);
@@ -84,7 +88,7 @@ export class AvailabilityEngine {
       const endTime    = `${endH}:${endM}`;
       const booked     = bookingCounts.get(startTime) ?? 0;
       // Slot is available if: not in past, not fully booked
-      const isPast     = isToday && (sh * 60 + sm) <= nowMins;
+      const isPast     = dateStr < now.date || (isToday && (sh * 60 + sm) <= nowMins);
       const available  = !isPast && booked < schedule.max_patients;
 
       return {
