@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { clearSession, getSession, AuthUser } from '@/lib/auth';
 import { useT, isRTL } from '@/lib/i18n';
+import { workflowNav } from '@/lib/workflow-nav';
 
 interface NavItem { label: string; icon: string; path: string }
 
@@ -38,7 +39,8 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
   }
 
   const sideW = collapsed ? 64 : 240;
-  const activePath = navItems
+  const allNav = [...navItems,...workflowNav(user,locale).filter(item=>!navItems.some(n=>n.path===item.path))];
+  const activePath = allNav
     .filter(item => pathname === item.path || pathname.startsWith(item.path + '/'))
     .sort((a, b) => b.path.length - a.path.length)[0]?.path;
 
@@ -69,7 +71,7 @@ export function DashboardShell({ children, navItems, title, locale }: DashboardS
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
-          {navItems.map(item => {
+          {allNav.map(item => {
             const active = item.path === activePath;
             const itemLabel = t(item.label);
             return (

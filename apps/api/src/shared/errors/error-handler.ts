@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './app-error';
 import { logger }   from '@/infrastructure/logger/logger';
+import { ZodError } from 'zod';
 
 export function globalErrorHandler(
   err:  Error,
@@ -8,6 +9,10 @@ export function globalErrorHandler(
   res:  Response,
   _next: NextFunction,
 ): void {
+  if (err instanceof ZodError) {
+    res.status(422).json({success:false,error:{code:'VALIDATION_ERROR',message:err.errors.map(e=>e.message).join('; '),details:err.errors}});
+    return;
+  }
   // Known application error
   if (err instanceof AppError) {
     if (err.statusCode >= 500) {

@@ -22,8 +22,16 @@ import { i18nRouter } from './modules/i18n/i18n.router';
 import { reportsRouter } from './modules/reports/reports.router';
 import { adminRouter } from './modules/admin/admin.router';
 import { portalRouter } from './modules/portal/portal.router';
+import { inpatientRouter } from './modules/inpatient/inpatient.router';
+import { operationsRouter } from './modules/operations/operations.router';
+import { radiologyRouter } from './modules/radiology/radiology.router';
+import { careMessagesRouter } from './modules/portal/engagement.router';
 
 const ROUTERS: [string, express.Router][] = [
+  ['/api/v1/care-messages', careMessagesRouter],
+  ['/api/v1/inpatient', inpatientRouter],
+  ['/api/v1/operations', operationsRouter],
+  ['/api/v1/radiology', radiologyRouter],
   ['/api/v1/auth',          authRouter],
   ['/api/v1/patients',      patientsRouter],
   ['/api/v1/doctors',       doctorsRouter],

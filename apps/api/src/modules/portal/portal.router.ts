@@ -2,6 +2,7 @@ import { Router }          from 'express';
 import { portalController} from './portal.controller';
 import { authenticate }    from '@/shared/middleware/authenticate';
 import { validate }        from '@/shared/middleware/validate';
+import { engagementRouter,verifyPortalLink } from './engagement.router';
 import {
   linkPatientSchema,
   cancelPortalAppointmentSchema,
@@ -9,6 +10,7 @@ import {
 
 export const portalRouter = Router();
 portalRouter.use(authenticate);
+portalRouter.use(engagementRouter);
 
 portalRouter.get('/profile',          portalController.getProfile);
 portalRouter.get('/summary',          portalController.getMedicalSummary);
@@ -23,6 +25,7 @@ portalRouter.get('/invoices',         portalController.getInvoices);
 portalRouter.get('/invoices/:invoiceId', portalController.getInvoiceDetail);
 portalRouter.get('/allergies',        portalController.getAllergies);
 portalRouter.post('/link-patient',
+  verifyPortalLink,
   validate(linkPatientSchema),
   portalController.linkPatient,
 );

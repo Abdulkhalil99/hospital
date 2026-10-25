@@ -166,13 +166,20 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
   const [mrn, setMrn] = useState('');
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [challengeId,setChallengeId]=useState('');
+  const [code,setCode]=useState('');
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleLink(e: React.FormEvent) {
     e.preventDefault(); setLoading(true); setMsg('');
     try {
+      if(!challengeId){
+        const challenge=await api.post<{challengeId:string;message:string}>('/portal/link-challenges',{mrn,...(phone.trim()?{phone:phone.trim()}:{}),...(dateOfBirth?{dateOfBirth}:{})});
+        setChallengeId(challenge.challengeId);setMsg(challenge.message);setLoading(false);return;
+      }
       await api.post('/portal/link-patient', {
+        challengeId,code,
         mrn,
         ...(phone.trim() ? { phone: phone.trim() } : {}),
         ...(dateOfBirth ? { dateOfBirth } : {}),
@@ -209,8 +216,9 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
           </div>
         </div>
         {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2', color: msg.startsWith('✅') ? '#166534' : '#991b1b' }}>{msg}</div>}
+        {challengeId&&<label>Verification code<input value={code} onChange={e=>setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required/><button type="button" className="secondary" onClick={()=>{setChallengeId('');setCode('');}}>Request a new code</button></label>}
         <button type="submit" disabled={loading || !mrn.trim() || (!phone.trim() && !dateOfBirth)} style={{ width: '100%' }}>
-          {loading ? t('dash.loading') : t('Link my record')}
+          {loading ? t('dash.loading') : challengeId?t('Link my record'):'Send verification code'}
         </button>
       </form>
     </div>

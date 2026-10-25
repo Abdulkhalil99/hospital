@@ -42,6 +42,38 @@ input:focus, select:focus, textarea:focus { border-color: #185FA5; box-shadow: 0
 
 table { border-collapse: collapse; width: 100%; }
 
+.workflow { max-width:1400px; margin:auto; display:grid; gap:20px; }
+.workflow-card { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:24px; box-shadow:0 3px 15px #0f172a04; }
+.workflow h2 { font-size:18px; margin-bottom:16px; color:#16324f; }
+.workflow h3 { font-size:15px; margin:24px 0 12px; }
+.workflow p { line-height:1.6; margin-bottom:12px; }
+.workflow a { color:#185fa5; text-decoration:underline; }
+.workflow-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:16px; }
+.workflow label { display:block; font-size:13px; font-weight:600; color:#475569; }
+.workflow label input,.workflow label textarea,.workflow label select { display:block; margin-top:7px; }
+.workflow input[type=checkbox] { width:22px; height:22px; }
+.workflow-form { padding:12px 0; }
+.workflow-search { max-width:460px; margin-bottom:16px; }
+.workflow-table { overflow-x:auto; }
+.workflow th,.workflow td { padding:12px; text-align:start; border-bottom:1px solid #edf0f5; font-size:13px; vertical-align:top; }
+.workflow th { color:#64748b; background:#f8fafc; }
+.workflow-error { background:#fff1f2; color:#9f1239; padding:12px; border-radius:8px; }
+.workflow-notice { background:#ecfdf5; color:#065f46; padding:12px; border-radius:8px; }
+.workflow-empty { padding:20px; color:#64748b; text-align:center; }
+.workflow-metrics,.workflow-bedboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+.workflow-metrics>div { background:#eaf2fa; color:#184c78; padding:20px; border-radius:12px; }
+.workflow-metrics strong { display:block; font-size:28px; }
+.workflow-bedboard button { text-align:start; padding:18px; border:1px solid #dbe5ee; }
+.workflow-bedboard strong,.workflow-bedboard span { display:block; }
+.workflow-bedboard span { font-size:12px; margin-top:9px; }
+.workflow-bedboard .free { background:#ecfdf5; color:#047857; opacity:1; }
+.workflow-bedboard .occupied { background:#eff6ff; color:#1d4ed8; }
+.workflow details { border-top:1px solid #e2e8f0; margin-top:16px; padding-top:16px; }
+.workflow summary { cursor:pointer; font-weight:600; color:#185fa5; padding:4px 0; }
+.workflow-note { border-inline-start:3px solid #93c5fd; padding:12px 16px; margin:12px 0; background:#f8fafc; }
+.workflow-note ul { margin:8px 0 0 20px; }
+@media(max-width:700px) { .workflow-card {padding:14px;} .workflow-fields{grid-template-columns:1fr;} }
+
 /* RTL font override */
 [dir="rtl"] body {
   font-family: 'Noto Naskh Arabic', Arial, sans-serif;
