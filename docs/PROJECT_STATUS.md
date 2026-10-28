@@ -22,6 +22,9 @@ actions, API mismatches, authorization, and local/production setup.
   cannot consume a valid challenge. Patient-only accounts use portal routes to
   access their own data; they cannot use staff permissions to read other
   patients' records.
+- Patient portal users can download a bounded FHIR R4 summary of their own
+  demographics, active allergies, diagnoses, prescriptions, vital signs, and
+  validated results released to the portal. The export is logged for audit.
 - Real-time notification, queue, and emergency subscriptions check account
   ownership or the corresponding staff permission.
 - Docker packaging includes workspace dependencies and Next standalone output.

@@ -6,6 +6,7 @@ import { Badge }               from '@/components/layout/Badge';
 import { api }                 from '@/lib/api';
 import { useT, formatDate, isRTL } from '@/lib/i18n';
 import { resolveNav, PATIENT_NAV }  from '@/lib/nav';
+import { getSession } from '@/lib/auth';
 
 export default function PatientPortal({ params: { locale } }: { params: { locale: string } }) {
   const t   = useT(locale);
@@ -17,6 +18,29 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
   const [allergies,setAllergies]= useState<any[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [linked,   setLinked]   = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+
+  async function downloadSummary() {
+    setExporting(true); setExportError('');
+    try {
+      const token = getSession()?.accessToken;
+      if (!token) throw new Error(t('Your session has expired. Please sign in again.'));
+      const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+      const response = await fetch(`${base}/portal/export/fhir`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+      if (!response.ok) throw new Error(t('Could not download your health summary. Please try again.'));
+      const url = URL.createObjectURL(await response.blob());
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `medicore-${String(profile?.mrn ?? 'patient').replace(/[^A-Za-z0-9_-]/g, '_')}-fhir-summary.json`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setExportError((error as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -76,6 +100,14 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
             ⚠ {allergies.length} {t('patients.allergies')}
           </div>
         )}
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <button type="button" onClick={downloadSummary} disabled={exporting}>
+          {exporting ? t('Preparing download…') : t('Download health summary (FHIR JSON)')}
+        </button>
+        <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>{t('Includes recent diagnoses, allergies, prescriptions, vital signs, and released lab results.')}</div>
+        {exportError && <p role="alert" style={{ color: '#991b1b' }}>{exportError}</p>}
       </div>
 
       {/* Stats */}

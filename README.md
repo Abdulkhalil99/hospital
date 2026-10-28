@@ -228,6 +228,9 @@ Current focus is local development and feature iteration.
 See [the project review](docs/PROJECT_STATUS.md) for the completed fixes and
 remaining feature gaps from the latest review.
 
+See [the Epic capability comparison](docs/EPIC_COMPARISON.md) for a scoped gap
+analysis and the patient FHIR summary export added to the portal.
+
 What is in good shape:
 
 - broad product coverage across major hospital workflows
