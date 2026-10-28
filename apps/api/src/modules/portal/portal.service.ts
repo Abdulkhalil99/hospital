@@ -1,7 +1,8 @@
 import { PortalRepository } from './portal.repository';
 import { AppointmentsService } from '@/modules/appointments/appointments.service';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors/app-error';
-import { linkPatientSchema } from './portal.validation';
+import { ConflictError, NotFoundError, UnauthorizedError } from '@/shared/errors/app-error';
+import { verifiedLinkPatientSchema } from './portal.validation';
+import { z } from 'zod';
 
 export class PortalService {
   private repo = new PortalRepository();
@@ -66,41 +67,10 @@ export class PortalService {
     return this.repo.getMyAllergies(patient.id);
   }
 
-  async linkPatient(userId: string, data: {
-    patientId?: string;
-    mrn?: string;
-    phone?: string;
-    dateOfBirth?: string;
-  }) {
-    const parsed = linkPatientSchema.safeParse(data);
-    if (!parsed.success) {
-      throw new ValidationError(parsed.error.errors.map(({ message, path }) => ({ message, path })));
-    }
-    const identity = parsed.data;
-    const existing = await this.repo.getPatientByUserId(userId);
-    if (existing) {
-      const samePatient =
-        existing.mrn === identity.mrn &&
-        (!identity.patientId || existing.id === identity.patientId);
-
-      if (samePatient) return existing;
-      throw new ConflictError('This portal account is already linked to a patient record.');
-    }
-
-    const patient = await this.repo.findPatientForPortalLink(identity);
-
-    if (!patient) {
-      throw new NotFoundError('Matching patient record');
-    }
-
-    if (patient.portal_user_id && patient.portal_user_id !== userId) {
-      throw new ConflictError('This patient record is already linked to another portal account.');
-    }
-
-    const linkedPatient = await this.repo.linkPortalUser(patient.id, userId);
-    if (!linkedPatient) {
-      throw new ConflictError('The patient record or portal account is already linked. Please refresh and try again.');
-    }
-    return linkedPatient;
+  async linkPatient(userId: string, data: z.infer<typeof verifiedLinkPatientSchema>) {
+    const result = await this.repo.verifyAndLinkPortalUser(userId, data);
+    if (result.status === 'invalid') throw new UnauthorizedError('Invalid or expired verification code.');
+    if (result.status === 'conflict') throw new ConflictError('The patient record or portal account is already linked. Please refresh and try again.');
+    return result.patient;
   }
 }

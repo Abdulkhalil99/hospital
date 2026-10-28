@@ -202,15 +202,15 @@ function LinkPatientCard({ locale, t, onLinked }: { locale: string; t: (k: strin
       <form onSubmit={handleLink}>
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('dash.mrn')}</label>
-          <input value={mrn} onChange={e => setMrn(e.target.value)} placeholder="MC-000123" required />
+          <input value={mrn} onChange={e => { setMrn(e.target.value); setChallengeId(''); setCode(''); setMsg(''); }} placeholder="MC-000123" required />
         </div>
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Registered mobile number')}</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} />
+          <input value={phone} onChange={e => { setPhone(e.target.value); setChallengeId(''); setCode(''); setMsg(''); }} />
         </div>
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{t('Or date of birth')}</label>
-          <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+          <input type="date" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setChallengeId(''); setCode(''); setMsg(''); }} />
           <div style={{ fontSize: 11, color: '#888', marginTop: 6 }}>
             {t('Provide at least one of the two verification fields above.')}
           </div>

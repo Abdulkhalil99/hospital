@@ -1,23 +1,22 @@
-import { Router,RequestHandler } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
-import { createHmac,randomInt,randomUUID,timingSafeEqual } from 'crypto';
+import { randomInt,randomUUID } from 'crypto';
 import rateLimit from 'express-rate-limit';
-import { config } from '@/config';
 import { getDb,withTransaction } from '@/infrastructure/database/db.client';
 import { authenticate } from '@/shared/middleware/authenticate';
 import { authorize } from '@/shared/middleware/authorize';
 import { validate } from '@/shared/middleware/validate';
 import { asyncHandler } from '@/shared/utils/async-handler';
-import { ConflictError,NotFoundError,UnauthorizedError } from '@/shared/errors/app-error';
+import { ConflictError,NotFoundError } from '@/shared/errors/app-error';
 import { PortalRepository } from './portal.repository';
 import { linkPatientSchema } from './portal.validation';
 import { AppointmentsService } from '@/modules/appointments/appointments.service';
 import { AvailabilityEngine } from '@/modules/doctors/availability.engine';
 import { createAppointmentSchema } from '@/modules/appointments/appointments.validation';
 import { sendSms } from '@/modules/notifications/channels/sms.channel';
+import { portalCodeDigest } from './portal-link';
 
 const uuid=z.string().uuid(),repo=new PortalRepository(),appointments=new AppointmentsService(),engine=new AvailabilityEngine();
-const digest=(id:string,code:string)=>createHmac('sha256',config.jwt.secret).update(id+':'+code).digest('hex');
 async function patient(user:string){const p=await repo.getPatientByUserId(user);if(!p||!p.is_active)throw new NotFoundError('Linked patient');return p;}
 const hospitalToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:process.env.HOSPITAL_TIMEZONE??'Asia/Kabul'}).format(new Date());
 export const engagementRouter=Router();
@@ -27,25 +26,12 @@ engagementRouter.post('/link-challenges',rateLimit({windowMs:15*60*1000,max:5}),
   // Identical responses prevent callers from enumerating registered patients.
   if(p?.phone&&!p.portal_user_id){
     const code=String(randomInt(100000,1000000));
-    await getDb().query("INSERT INTO patients.portal_link_challenges(id,user_id,patient_id,code_hash,expires_at) VALUES($1,$2,$3,$4,NOW()+INTERVAL '10 minutes')",[id,req.user!.id,p.id,digest(id,code)]);
+    await getDb().query("INSERT INTO patients.portal_link_challenges(id,user_id,patient_id,code_hash,expires_at) VALUES($1,$2,$3,$4,NOW()+INTERVAL '10 minutes')",[id,req.user!.id,p.id,portalCodeDigest(id,code)]);
     const delivery=await sendSms(p.phone,`MediCore verification code: ${code}. Expires in 10 minutes.`);
     if(!delivery.success)await getDb().query('UPDATE patients.portal_link_challenges SET used_at=NOW() WHERE id=$1',[id]);
   }
   res.json({success:true,data:{challengeId:id,message:'If the details match an unlinked record, a code has been sent to the registered phone.'}});
 }));
-export const verifyPortalLink:RequestHandler=asyncHandler(async(req,_res,next)=>{
-  const {challengeId,code}=z.object({challengeId:uuid,code:z.string().regex(/^\d{6}$/)}).parse(req.body);
-  const identity=linkPatientSchema.parse(req.body),p=await repo.findPatientForPortalLink(identity);
-  const ok=await withTransaction(async client=>{
-    const {rows:[challenge]}=await client.query('SELECT * FROM patients.portal_link_challenges WHERE id=$1 AND user_id=$2 FOR UPDATE',[challengeId,req.user!.id]);
-    if(!challenge||challenge.used_at||challenge.attempts>=5||new Date(challenge.expires_at)<=new Date())return false;
-    await client.query('UPDATE patients.portal_link_challenges SET attempts=attempts+1 WHERE id=$1',[challengeId]);
-    if(!p||p.id!==challenge.patient_id||!timingSafeEqual(Buffer.from(challenge.code_hash,'hex'),Buffer.from(digest(challengeId,code),'hex')))return false;
-    await client.query('UPDATE patients.portal_link_challenges SET used_at=NOW() WHERE id=$1',[challengeId]);return true;
-  });
-  if(!ok)throw new UnauthorizedError('Invalid or expired verification code.');
-  next();
-});
 engagementRouter.get('/booking-options',asyncHandler(async(req,res)=>{
   await patient(req.user!.id);
   const doctors=await getDb().query(`SELECT d.id,u.full_name FROM doctors.doctors d JOIN auth.users u ON u.id=d.user_id WHERE u.is_active AND d.is_active ORDER BY u.full_name`);

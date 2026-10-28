@@ -1,4 +1,4 @@
-# Project review — 24 October 2026
+# Project review — 28 October 2026
 
 The implemented hospital workflows were reviewed for build failures, incomplete
 actions, API mismatches, authorization, and local/production setup.
@@ -17,8 +17,11 @@ actions, API mismatches, authorization, and local/production setup.
   stale search and availability responses.
 - Doctors can start or reopen an encounter from the patient list.
 - Portal linking requires identifying details and applies ownership changes
-  atomically. Patient-only accounts use portal routes to access their own data;
-  they cannot use staff permissions to read other patients' records.
+  atomically. A six-digit code sent to the registered phone must now be
+  verified in the same transaction that links the record, so a failed link
+  cannot consume a valid challenge. Patient-only accounts use portal routes to
+  access their own data; they cannot use staff permissions to read other
+  patients' records.
 - Real-time notification, queue, and emergency subscriptions check account
   ownership or the corresponding staff permission.
 - Docker packaging includes workspace dependencies and Next standalone output.
@@ -32,11 +35,8 @@ actions, API mismatches, authorization, and local/production setup.
 
 - Push notifications still lack device-token registration and lookup.
 - Radiology, inpatient wards, theatre, inventory, documents, insurance, and HR
-  are placeholder modules rather than implemented workflows. They are not
-  mounted as working API routes. Billing's insurance-claim submission is a
-  separate existing workflow.
-- Portal self-linking currently checks MRN plus phone/date of birth. Verifying
-  possession through an OTP challenge remains an additional workflow to build.
+  now have working API routes and staff workflow screens. They still need
+  broader real-world workflow validation and integration coverage.
 - Existing lint warnings and broad use of `any` remain technical cleanup work.
 
 ## Deployment configuration
