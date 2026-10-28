@@ -253,7 +253,7 @@ export class PortalRepository {
   }
 
   async getMedicalSummary(patientId: string) {
-    const [diagnoses, vitals, encounters] = await Promise.all([
+    const [diagnoses, vitals, encounters, problems] = await Promise.all([
       this.db.query(
         `SELECT DISTINCT d.icd10_code, d.icd10_name, d.diagnosis_type, MAX(d.created_at) AS last_recorded
          FROM emr.diagnoses d
@@ -280,12 +280,18 @@ export class PortalRepository {
          ORDER BY e.started_at DESC LIMIT 5`,
         [patientId],
       ),
+      this.db.query(
+        `SELECT id,icd10_code,display,notes,recorded_at FROM patients.problem_list
+         WHERE patient_id=$1 AND status='active' ORDER BY recorded_at DESC LIMIT 100`,
+        [patientId],
+      ),
     ]);
 
     return {
       diagnoses:         diagnoses.rows,
       recentVitals:      vitals.rows,
       recentEncounters:  encounters.rows,
+      activeProblems: problems.rows,
     };
   }
 }

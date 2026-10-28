@@ -5,6 +5,7 @@ type PatientRow = { id: string; mrn: string; first_name: string; last_name: stri
   date_of_birth: DbDate; is_active: boolean; phone?: string | null };
 type AllergyRow = { id: string; allergen: string; reaction: string; severity: string; recorded_at: DbDate };
 type DiagnosisRow = { id: string; icd10_code: string; icd10_name: string; created_at: DbDate };
+type ProblemRow = { id: string; icd10_code: string; display: string; recorded_at: DbDate };
 type PrescriptionRow = { id: string; drug_name: string; generic_name?: string | null; dosage: string; route: string;
   frequency: string; instructions?: string | null; status: string; created_at: DbDate };
 type VitalRow = { id: string; recorded_at: DbDate; temperature_c?: number | string | null;
@@ -28,11 +29,12 @@ export function makePatientBundle(input: {
   patient: PatientRow;
   allergies: AllergyRow[];
   diagnoses: DiagnosisRow[];
+  problems: ProblemRow[];
   prescriptions: PrescriptionRow[];
   vitals: VitalRow[];
   labResults: LabResultRow[];
 }, generatedAt = new Date()) {
-  const { patient, allergies, diagnoses, prescriptions, vitals, labResults } = input;
+  const { patient, allergies, diagnoses, problems, prescriptions, vitals, labResults } = input;
   const subject = { reference: fullUrl('Patient', patient.id) };
   const entries: ReturnType<typeof entry>[] = [];
 
@@ -61,6 +63,16 @@ export function makePatientBundle(input: {
       category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-category', code: 'encounter-diagnosis' }] }],
       code: { coding: [{ system: 'http://hl7.org/fhir/sid/icd-10', code: diagnosis.icd10_code, display: diagnosis.icd10_name }] },
       recordedDate: date(diagnosis.created_at),
+    }));
+  }
+
+  for (const problem of problems) {
+    entries.push(entry({
+      resourceType: 'Condition', id: problem.id, subject,
+      clinicalStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-clinical', code: 'active' }] },
+      category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-category', code: 'problem-list-item' }] }],
+      code: { coding: [{ system: 'http://hl7.org/fhir/sid/icd-10', code: problem.icd10_code, display: problem.display }] },
+      recordedDate: date(problem.recorded_at),
     }));
   }
 

@@ -8,11 +8,13 @@ export async function exportMyFhirSummary(userId: string) {
   const patient = await new PortalRepository().getPatientByUserId(userId);
   if (!patient) throw new NotFoundError('Patient profile linked to this account');
   const db = getDb();
-  const [allergies, diagnoses, prescriptions, vitals, labResults] = await Promise.all([
+  const [allergies, diagnoses, problems, prescriptions, vitals, labResults] = await Promise.all([
     db.query('SELECT id,allergen,reaction,severity,recorded_at FROM patients.allergies WHERE patient_id=$1 AND is_active ORDER BY recorded_at DESC LIMIT 100', [patient.id]),
     db.query(`SELECT d.id,d.icd10_code,d.icd10_name,d.created_at FROM emr.diagnoses d
       JOIN emr.encounters e ON e.id=d.encounter_id AND NOT e.is_deleted AND e.status<>'voided'
       WHERE d.patient_id=$1 ORDER BY d.created_at DESC LIMIT 100`, [patient.id]),
+    db.query(`SELECT id,icd10_code,display,recorded_at FROM patients.problem_list
+      WHERE patient_id=$1 AND status='active' ORDER BY recorded_at DESC LIMIT 100`, [patient.id]),
     db.query(`SELECT p.id,p.drug_name,p.generic_name,p.dosage,p.route,p.frequency,p.instructions,p.status,p.created_at
       FROM emr.prescriptions p JOIN emr.encounters e ON e.id=p.encounter_id AND NOT e.is_deleted AND e.status<>'voided'
       WHERE p.patient_id=$1 ORDER BY p.created_at DESC LIMIT 100`, [patient.id]),
@@ -28,5 +30,5 @@ export async function exportMyFhirSummary(userId: string) {
   ]);
   await db.query("INSERT INTO audit.emr_access_logs(user_id,patient_id,access_type) VALUES($1,$2,'export')", [userId, patient.id]);
   return { bundle: makePatientBundle({ patient, allergies: allergies.rows, diagnoses: diagnoses.rows,
-    prescriptions: prescriptions.rows, vitals: vitals.rows, labResults: labResults.rows }), mrn: patient.mrn };
+    problems: problems.rows, prescriptions: prescriptions.rows, vitals: vitals.rows, labResults: labResults.rows }), mrn: patient.mrn };
 }

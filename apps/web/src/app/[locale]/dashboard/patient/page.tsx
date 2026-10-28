@@ -119,6 +119,18 @@ export default function PatientPortal({ params: { locale } }: { params: { locale
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
+        {summary?.activeProblems?.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '18px 20px' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{t('Active problems')}</div>
+            {summary.activeProblems.map((problem: any) => (
+              <div key={problem.id} style={{ display: 'flex', gap: 10, padding: '7px 0', borderBottom: '1px solid #f5f5f5', fontSize: 13 }}>
+                <strong style={{ color: '#185FA5' }}>{problem.icd10_code}</strong>
+                <span>{problem.display}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Allergies */}
         {allergies.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #fca5a5', padding: '18px 20px' }}>

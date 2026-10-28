@@ -3,6 +3,7 @@ import { patientsController }  from './patients.controller';
 import { authenticate }        from '@/shared/middleware/authenticate';
 import { authorize }           from '@/shared/middleware/authorize';
 import { validate }            from '@/shared/middleware/validate';
+import { problemListRouter } from './problem-list.router';
 import {
   createPatientSchema, updatePatientSchema,
   allergySchema, familyMemberSchema,
@@ -12,6 +13,7 @@ import {
 export const patientsRouter = Router();
 
 patientsRouter.use(authenticate);
+patientsRouter.use('/:id/problems', problemListRouter);
 
 // ── Search & lookup ──────────────────────────────────────────
 patientsRouter.get('/',              authorize('patient:search'), patientsController.search);

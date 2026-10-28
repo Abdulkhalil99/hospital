@@ -23,11 +23,12 @@ describe('Patient FHIR export access', () => {
     mockQuery.mockResolvedValue({ rows: [] });
     const result = await exportMyFhirSummary('user-1');
     expect(result.bundle.entry).toHaveLength(1);
-    expect(mockQuery).toHaveBeenCalledTimes(6);
-    for (const call of mockQuery.mock.calls.slice(0, 5)) expect(call[1]).toEqual([patient.id]);
-    expect(mockQuery.mock.calls[4][0]).toContain('r.released_at IS NOT NULL');
-    expect(mockQuery.mock.calls[4][0]).toContain('r.validated_at IS NOT NULL');
-    expect(mockQuery.mock.calls[5][1]).toEqual(['user-1', patient.id]);
-    expect(mockQuery.mock.calls[5][0]).toContain("'export'");
+    expect(mockQuery).toHaveBeenCalledTimes(7);
+    for (const call of mockQuery.mock.calls.slice(0, 6)) expect(call[1]).toEqual([patient.id]);
+    expect(mockQuery.mock.calls[2][0]).toContain("status='active'");
+    expect(mockQuery.mock.calls[5][0]).toContain('r.released_at IS NOT NULL');
+    expect(mockQuery.mock.calls[5][0]).toContain('r.validated_at IS NOT NULL');
+    expect(mockQuery.mock.calls[6][1]).toEqual(['user-1', patient.id]);
+    expect(mockQuery.mock.calls[6][0]).toContain("'export'");
   });
 });

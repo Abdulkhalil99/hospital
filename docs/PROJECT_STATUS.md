@@ -25,6 +25,10 @@ actions, API mismatches, authorization, and local/production setup.
 - Patient portal users can download a bounded FHIR R4 summary of their own
   demographics, active allergies, diagnoses, prescriptions, vital signs, and
   validated results released to the portal. The export is logged for audit.
+- Clinicians can maintain a longitudinal problem list, with active, resolved,
+  and entered-in-error states. Active problems appear in the patient portal and
+  FHIR summary. Patient registration now accepts the existing `unknown` blood
+  type default without a database length error.
 - Real-time notification, queue, and emergency subscriptions check account
   ownership or the corresponding staff permission.
 - Docker packaging includes workspace dependencies and Next standalone output.

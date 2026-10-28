@@ -5,6 +5,7 @@ import { api }                  from '@/lib/api';
 import { useT }                 from '@/lib/i18n';
 
 interface Props { params: { locale: string; encounterId: string } }
+interface Problem { id: string; icd10_code: string; display: string; status: 'active' | 'resolved' | 'entered_in_error'; notes: string | null }
 
 export default function EncounterDetail({ params: { locale, encounterId } }: Props) {
   const router = useRouter();
@@ -13,7 +14,9 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [msg,     setMsg]     = useState('');
-  const [tab,     setTab]     = useState<'soap'|'vitals'|'diagnoses'|'prescriptions'|'lab'>('soap');
+  const [tab,     setTab]     = useState<'soap'|'vitals'|'diagnoses'|'problems'|'prescriptions'|'lab'>('soap');
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [newProblem, setNewProblem] = useState({ icd10Code: '', display: '', notes: '' });
 
   const [soap,    setSoap]    = useState({ subjective: '', objective: '', assessment: '', plan: '' });
   const [vitals,  setVitals]  = useState({ temperatureC: '', bpSystolic: '', bpDiastolic: '', pulseBpm: '', o2Saturation: '', weightKg: '' });
@@ -25,6 +28,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     api.get<any>(`/emr/${encounterId}/full`)
       .then(d => {
         setData(d);
+        api.get<Problem[]>(`/patients/${d.encounter.patient_id}/problems`).then(setProblems).catch(() => setMsg(`❌ ${t('Could not load problem list')}`));
         const note = d.notes?.find((n: any) => n.note_type === 'soap');
         if (note) setSoap({ subjective: note.subjective ?? '', objective: note.objective ?? '', assessment: note.assessment ?? '', plan: note.plan ?? '' });
         setLoading(false);
@@ -67,6 +71,27 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
     setSaving(false);
   }
 
+  async function addProblem() {
+    setSaving(true); setMsg('');
+    try {
+      await api.post(`/patients/${data.encounter.patient_id}/problems`, newProblem);
+      setProblems(await api.get<Problem[]>(`/patients/${data.encounter.patient_id}/problems`));
+      setNewProblem({ icd10Code: '', display: '', notes: '' });
+      setMsg(`✅ ${t('Problem added')}`);
+    } catch (e: any) { setMsg(`❌ ${e.message}`); }
+    setSaving(false);
+  }
+
+  async function changeProblem(problem: Problem, status: Problem['status']) {
+    setSaving(true); setMsg('');
+    try {
+      await api.patch(`/patients/${data.encounter.patient_id}/problems/${problem.id}`, { status });
+      setProblems(await api.get<Problem[]>(`/patients/${data.encounter.patient_id}/problems`));
+      setMsg(`✅ ${t('Problem list updated')}`);
+    } catch (e: any) { setMsg(`❌ ${e.message}`); }
+    setSaving(false);
+  }
+
   async function addPrescription() {
     setSaving(true); setMsg('');
     try {
@@ -102,8 +127,8 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
 
   const enc = data.encounter;
 
-  const TABS = ['soap','vitals','diagnoses','prescriptions','lab'] as const;
-  const LABELS = [t('SOAP Note'), t('nav.vitals'), t('emr.diagnoses'), t('emr.prescriptions'), t('emr.labOrders')];
+  const TABS = ['soap','vitals','diagnoses','problems','prescriptions','lab'] as const;
+  const LABELS = [t('SOAP Note'), t('nav.vitals'), t('emr.diagnoses'), t('Problem list'), t('emr.prescriptions'), t('emr.labOrders')];
 
   const fieldStyle = { marginBottom: 12 } as const;
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4, color: '#555' } as const;
@@ -144,6 +169,7 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
           }}>
             {LABELS[i]}
             {t === 'diagnoses'    && data.diagnoses?.length    > 0 && <span style={{ marginLeft: 6, background: '#fff3', borderRadius: 10, padding: '0 5px', fontSize: 11 }}>{data.diagnoses.length}</span>}
+            {t === 'problems' && problems.filter(p => p.status === 'active').length > 0 && <span style={{ marginLeft: 6, background: '#fff3', borderRadius: 10, padding: '0 5px', fontSize: 11 }}>{problems.filter(p => p.status === 'active').length}</span>}
             {t === 'prescriptions'&& data.prescriptions?.length > 0 && <span style={{ marginLeft: 6, background: '#fff3', borderRadius: 10, padding: '0 5px', fontSize: 11 }}>{data.prescriptions.length}</span>}
           </button>
         ))}
@@ -240,6 +266,34 @@ export default function EncounterDetail({ params: { locale, encounterId } }: Pro
               <button onClick={addDiagnosis} disabled={saving}>{saving ? t('Saving…') : t('Add diagnosis')}</button>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'problems' && (
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e8e8e8', padding: '20px 22px' }}>
+          <p style={{ fontSize: 13, color: '#666' }}>{t('Longitudinal conditions across visits')}</p>
+          {problems.length === 0 && <p style={{ fontSize: 13, color: '#888' }}>{t('No problems recorded')}</p>}
+          {problems.map(problem => (
+            <div key={problem.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #eee', fontSize: 13 }}>
+              <strong style={{ fontFamily: 'monospace' }}>{problem.icd10_code}</strong>
+              <span style={{ flex: 1 }}>{problem.display}{problem.notes && <small style={{ display: 'block', color: '#777' }}>{problem.notes}</small>}</span>
+              <span>{t(problem.status.replace(/_/g, ' '))}</span>
+              {problem.status === 'active' && <button type="button" disabled={saving} onClick={() => changeProblem(problem, 'resolved')}>{t('Resolve')}</button>}
+              {problem.status === 'resolved' && <button type="button" disabled={saving} onClick={() => changeProblem(problem, 'active')}>{t('Reopen')}</button>}
+              {problem.status !== 'entered_in_error' && <button type="button" className="secondary" disabled={saving} onClick={() => {
+                if (confirm(t('Mark this entry as entered in error?'))) void changeProblem(problem, 'entered_in_error');
+              }}>{t('Entered in error')}</button>}
+            </div>
+          ))}
+          <div style={{ marginTop: 20 }}>
+            <h3 style={{ fontSize: 14 }}>{t('Add problem')}</h3>
+            <div style={grid2}>
+              <div><label style={labelStyle}>{t('ICD-10 Code *')}</label><input value={newProblem.icd10Code} onChange={e => setNewProblem(p => ({ ...p, icd10Code: e.target.value }))} /></div>
+              <div><label style={labelStyle}>{t('Diagnosis name *')}</label><input value={newProblem.display} onChange={e => setNewProblem(p => ({ ...p, display: e.target.value }))} /></div>
+              <div style={{ gridColumn: '1/-1' }}><label style={labelStyle}>{t('Notes')}</label><textarea value={newProblem.notes} onChange={e => setNewProblem(p => ({ ...p, notes: e.target.value }))} rows={2} /></div>
+            </div>
+            <button type="button" style={{ marginTop: 12 }} disabled={saving || !newProblem.icd10Code.trim() || !newProblem.display.trim()} onClick={addProblem}>{t('Add problem')}</button>
+          </div>
         </div>
       )}
 
